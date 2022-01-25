@@ -25,6 +25,7 @@ void connection_init()
 
 static int connection_server_setup()
 {
+    printf("Server starting...\n");
     sem = sem_open(COMMON_SEMAPHORE_NAME, O_CREAT, 0600, 0);
     err(sem == SEM_FAILED, "sem_open");
 
@@ -64,10 +65,12 @@ static int connection_client_setup()
     int result = kill(pdata->server_pid, 0);
     if (result == -1 && errno == ESRCH)
     {
-        printf("Brak procesu serwera (%d)\n", pdata->server_pid);
+        printf("Server proccess doesnt exits (%d)\n", pdata->server_pid);
         munmap(pdata, sizeof(struct data2_t));
         close(fd);
         sem_close(sem);
+        sem_unlink(COMMON_SEMAPHORE_NAME);
+        shm_unlink(COMMON_FILE_NAME);
         return 4;
     }
 
