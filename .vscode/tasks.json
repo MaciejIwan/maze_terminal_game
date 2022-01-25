@@ -3,7 +3,7 @@
     "tasks": [
       {
         "label": "make",
-        "command": "make",
+        "command": "make rebuild",
         "args": ["all"],
         "options": {
           "cwd": "${workspaceFolder}"
