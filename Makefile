@@ -10,6 +10,7 @@ default:
 	@echo "Choose operation:"
 	@echo "		make build_run	- build and run the game"
 	@echo "		make build		- build the game"
+	@echo "		make rebuild	- rebuild the game"
 	@echo "		make run		- run the game"
 	@echo "		make clean		- delete all files"
 
@@ -23,6 +24,9 @@ run:
 	./${OUTDIR}/${OUTFILE}
 
 build_run : clean build run
+
+valgrind: build
+	valgrind --leak-check=full --show-leak-kinds=all -s ./${OUTDIR}/${OUTFILE}
 
 clean: 
 	rm -r -f build

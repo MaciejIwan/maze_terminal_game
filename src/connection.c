@@ -1,14 +1,15 @@
 #include "connection.h"
 
-static int connection_client_setup();
-static int connection_server_setup();
-static int connection_server_close();
-static int connection_client_close();
 sem_t *sem;
 int fd;
 struct data2_t *pdata;
 
 extern CLIENT_TYPE;
+
+static int connection_client_setup();
+static int connection_server_setup();
+static int connection_server_close();
+static int connection_client_close();
 
 void connection_init()
 {
@@ -29,11 +30,11 @@ void connection_init()
 
 void connection_close(){
     switch(CLIENT_TYPE){
-        TYPE_HOST:
-            connection_client_close();
-            break;
-        TYPE_CLIENT:
+        case TYPE_HOST:
             connection_server_close();
+            break;
+        case TYPE_CLIENT:
+            connection_client_close();
             break;
     }
 }
@@ -67,6 +68,8 @@ static int connection_client_setup()
     fd = shm_open(COMMON_FILE_NAME, O_RDWR, 0600);
     if (fd == -1)
     {
+        sem_close(sem);
+        sem_unlink(COMMON_FILE_NAME);
         return 2;
     }
 

@@ -24,8 +24,9 @@ int CLIENT_TYPE = 1;
 
 int main()
 {
-    printf("Hello world!\n");
+    printf("Hello world! %d\n",(int)sizeof(struct data2_t));
     connection_init(); // deal with 2 cases, server and client
     connection_close();
     printf("Server end\n");
+    return 0;
 }
