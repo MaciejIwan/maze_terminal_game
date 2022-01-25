@@ -2,7 +2,7 @@
 #define _CONNECTION_H_
 #include "common.h"
 
-enum CLIENT_TYPES {TYPE_HOST, TYPE_CLIENT};
+
 void connection_init(); // deal with server and host
 void connection_close();// deal with server and host
 // static int connection_client_setup();

@@ -21,6 +21,14 @@
 
 #define COMMON_FILE_NAME "/msg_data2"
 #define COMMON_SEMAPHORE_NAME "/msg_signal2"
+#define SEC 1000 * 1000
+
+enum CLIENT_TYPES {TYPE_HOST, TYPE_CLIENT};
+
+
+extern sem_t *sem;
+extern int fd;
+extern struct data2_t *pdata;
 
 #define PAYLOAD_SIZE 1024
 struct data2_t {
@@ -38,3 +46,17 @@ static void err(int c, const char* msg) {
 }
 
 #endif // _COMMON_H_
+
+
+
+/*
+// semaphore mozna znalexc w /dev/shm
+    S_IRUSR; // creator can read
+    S_IWUSR; // creator can wrtie
+    S_IRGRP; // group can read
+    S_IWGRP; // group can wrtie
+    S_IWOTH; // other can write
+    S_IROTH; // other can read
+
+    S_IRUSR; // creator can read
+*/

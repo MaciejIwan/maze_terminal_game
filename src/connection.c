@@ -4,7 +4,7 @@ sem_t *sem;
 int fd;
 struct data2_t *pdata;
 
-extern CLIENT_TYPE;
+extern int CLIENT_TYPE;
 
 static int connection_client_setup();
 static int connection_server_setup();
