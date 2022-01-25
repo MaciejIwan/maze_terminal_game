@@ -2,12 +2,13 @@
 
 static int connection_client_setup();
 static int connection_server_setup();
-
+static int connection_server_close();
+static int connection_client_close();
 sem_t *sem;
 int fd;
 struct data2_t *pdata;
 
-
+extern CLIENT_TYPE;
 
 void connection_init()
 {
@@ -17,12 +18,25 @@ void connection_init()
     res = connection_client_setup();
 
     // if any error, clear all data and setup proccess as server
-    if (res) res = connection_server_setup();
+    if (res) {
+        res = connection_server_setup();
+        CLIENT_TYPE = TYPE_HOST;
+        }
 
     // error 
     err(res == 1, "Connection error");
 }
 
+void connection_close(){
+    switch(CLIENT_TYPE){
+        TYPE_HOST:
+            connection_client_close();
+            break;
+        TYPE_CLIENT:
+            connection_server_close();
+            break;
+    }
+}
 static int connection_server_setup()
 {
     printf("Server starting...\n");
@@ -77,3 +91,14 @@ static int connection_client_setup()
     return 0;
 }
 
+static int connection_client_close(){
+    sem_close(sem);
+    munmap(pdata, sizeof(struct data2_t));
+    close(fd);
+}
+static int connection_server_close(){
+    munmap(pdata, sizeof(struct data2_t));
+    close(fd);
+    shm_unlink(COMMON_FILE_NAME);
+    sem_close(sem);
+}

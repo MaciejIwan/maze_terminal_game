@@ -7,6 +7,9 @@
 sem_t *sem_ping;
 sem_t *sem_pong;
 
+
+int CLIENT_TYPE = 1;
+
 /*
 // semaphore mozna znalexc w /dev/shm
     S_IRUSR; // creator can read
@@ -23,19 +26,6 @@ int main()
 {
     printf("Hello world!\n");
     connection_init(); // deal with 2 cases, server and client
-
-    while (1)
-    {
-        
-        sem_post(sem_pong);         // popros dane
-        sem_wait(sem_ping);        // poczekaj na dane
-        printf("odebralem dane\n"); // zrob akcje z danymi
-        usleep(SEC);                // poczekaj sobie
-       
-    }
-
-    sem_close(sem_ping);
-    sem_close(sem_pong);
-
+    connection_close();
     printf("Server end\n");
 }
