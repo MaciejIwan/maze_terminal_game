@@ -3,7 +3,7 @@
 
 #if !defined(_COMMON_H_)
 #define _COMMON_H_
- // common file 
+ // common file
 #include <stdio.h>
 #include <errno.h>
 #include <pthread.h>
@@ -15,15 +15,19 @@
 #include <unistd.h> // close, ftruncate
 #include <string.h> // strcasecmp
 #include <time.h> // time
-#include <ncurses.h> 
+#include <locale.h> /* for LC_ALL */
+#include <ncurses.h>
 #include <signal.h>
+
 
 #include "client.h"
 #include "server.h"
 #include "connection.h"
+#include "key_listener.h"
+#include "display.h"
 
-#define COMMON_FILE_NAME "/msg_data2"
-#define COMMON_SEMAPHORE_NAME "/msg_signal2"
+#define FILE_C_SAVE_TO "/msg_data2"
+#define FILE_C_SAVE_TO_SEM "/msg_signal2"
 #define SEC 1000 * 1000
 
 enum CLIENT_TYPES {TYPE_HOST, TYPE_CLIENT};

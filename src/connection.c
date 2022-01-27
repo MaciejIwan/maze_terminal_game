@@ -45,12 +45,12 @@ void connection_close()
 static int connection_server_setup()
 {
     printf("Server starting...\n");
-    sem = sem_open(COMMON_SEMAPHORE_NAME, O_CREAT, 0600, 0);
+    sem = sem_open(FILE_C_SAVE_TO_SEM, O_CREAT, 0600, 0);
     if(sem == SEM_FAILED){
         return 1;
     }
 
-    fd = shm_open(COMMON_FILE_NAME, O_CREAT | O_RDWR, 0600);
+    fd = shm_open(FILE_C_SAVE_TO, O_CREAT | O_RDWR, 0600);
     if (fd == -1)
     {
         connection_server_close();
@@ -72,13 +72,13 @@ static int connection_server_setup()
 
 static int connection_client_setup()
 {
-    sem = sem_open(COMMON_SEMAPHORE_NAME, 0);
+    sem = sem_open(FILE_C_SAVE_TO_SEM, 0);
     if (sem == SEM_FAILED)
     {
         return 1;
     }
 
-    fd = shm_open(COMMON_FILE_NAME, O_RDWR, 0600);
+    fd = shm_open(FILE_C_SAVE_TO, O_RDWR, 0600);
     if (fd == -1)
     {
         connection_client_close();
@@ -99,8 +99,8 @@ static int connection_client_setup()
         munmap(pdata, sizeof(struct data2_t));
         close(fd);
         sem_close(sem);
-        sem_unlink(COMMON_SEMAPHORE_NAME);
-        shm_unlink(COMMON_FILE_NAME);
+        sem_unlink(FILE_C_SAVE_TO_SEM);
+        shm_unlink(FILE_C_SAVE_TO);
         return 4;
     }
 
@@ -117,7 +117,7 @@ static int connection_server_close()
 {
     munmap(pdata, sizeof(struct data2_t));
     close(fd);
-    shm_unlink(COMMON_FILE_NAME);
+    shm_unlink(FILE_C_SAVE_TO);
     sem_close(sem);
-    sem_unlink(COMMON_SEMAPHORE_NAME);
+    sem_unlink(FILE_C_SAVE_TO_SEM);
 }

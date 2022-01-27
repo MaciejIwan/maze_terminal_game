@@ -9,8 +9,9 @@ void server()
     {
         sem_wait(sem);
         sem_wait(&pdata->cs);
-        printf("[%03d:%03d]: %s\n", counter++, pdata->id, pdata->payload);
-        terminate = strcasecmp(pdata->payload, "quit") == 0;
+        printf("[%03d:%03d]: %c\n", counter++, pdata->id, (char)(*(int*)pdata->payload));
+        terminate = *(int*)pdata->payload == 'q';
         sem_post(&pdata->cs);
+        usleep(SEC);
     }
 }
