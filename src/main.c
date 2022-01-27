@@ -15,11 +15,6 @@ void server()
         terminate = strcasecmp(pdata->payload, "quit") == 0;
         sem_post(&pdata->cs);
     }
-    munmap(pdata, sizeof(struct data2_t));
-    close(fd);
-    shm_unlink("/msg_data");
-    sem_close(sem);
-    exit(0);
 }
 
 void client()
@@ -44,10 +39,6 @@ void client()
 
         sem_post(sem);
     }
-    sem_close(sem);
-    munmap(pdata, sizeof(struct data2_t));
-    close(fd);
-    exit(0);
 }
 
 int main()
