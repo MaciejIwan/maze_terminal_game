@@ -16,8 +16,11 @@
 #include <string.h> // strcasecmp
 #include <time.h> // time
 #include <ncurses.h> 
+#include <signal.h>
 
-//#include "connection.h"
+#include "client.h"
+#include "server.h"
+#include "connection.h"
 
 #define COMMON_FILE_NAME "/msg_data2"
 #define COMMON_SEMAPHORE_NAME "/msg_signal2"

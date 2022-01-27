@@ -58,7 +58,7 @@ static int connection_server_setup()
     }
 
     ftruncate(fd, sizeof(struct data2_t));
-    struct data2_t *pdata = (struct data2_t *)mmap(NULL, sizeof(struct data2_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+    pdata = (struct data2_t *)mmap(NULL, sizeof(struct data2_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if(sem == NULL){
         connection_server_close();
         return 3;
