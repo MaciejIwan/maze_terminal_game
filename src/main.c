@@ -21,6 +21,7 @@ void client()
 {
     srand(time(NULL));
     int my_id = rand() % 1000;
+    
     printf("Identyfikator sesji: %d; pdata=%p......\n", my_id, (void *)pdata);
     while (1)
     {
@@ -32,12 +33,12 @@ void client()
         if (*msg)
             msg[strlen(msg) - 1] = '\x0';
 
-        sem_wait(&pdata->cs);
+        int res = sem_wait(&pdata->cs);
         strcpy(pdata->payload, msg);
         pdata->id = my_id;
-        sem_post(&pdata->cs);
+        res = sem_post(&pdata->cs);
 
-        sem_post(sem);
+        res = sem_post(sem);
     }
 }
 
