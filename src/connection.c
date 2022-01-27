@@ -26,7 +26,7 @@ void connection_init()
     }
 
     // error
-    err(res == 1, "Connection error");
+    err(res != 0, "Connection error");
 }
 
 void connection_close()
@@ -46,14 +46,21 @@ static int connection_server_setup()
 {
     printf("Server starting...\n");
     sem = sem_open(COMMON_SEMAPHORE_NAME, O_CREAT, 0600, 0);
+    if(sem == SEM_FAILED){
+        return 1;
+    }
     err(sem == SEM_FAILED, "sem_open");
 
     fd = shm_open(COMMON_FILE_NAME, O_CREAT | O_RDWR, 0600);
-    err(fd == -1, "shm_open");
+    if(sem == -1){
+        return 2;
+    }
 
     ftruncate(fd, sizeof(struct data2_t));
     struct data2_t *pdata = (struct data2_t *)mmap(NULL, sizeof(struct data2_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
-    err(pdata == NULL, "mmap");
+    if(sem == NULL){
+        return 3;
+    }
 
     sem_init(&pdata->cs, 1, 1); // shared, signaled
     pdata->server_pid = getpid();
