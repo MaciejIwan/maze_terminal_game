@@ -49,16 +49,18 @@ static int connection_server_setup()
     if(sem == SEM_FAILED){
         return 1;
     }
-    err(sem == SEM_FAILED, "sem_open");
 
     fd = shm_open(COMMON_FILE_NAME, O_CREAT | O_RDWR, 0600);
-    if(sem == -1){
+    if (fd == -1)
+    {
+        connection_server_close();
         return 2;
     }
 
     ftruncate(fd, sizeof(struct data2_t));
     struct data2_t *pdata = (struct data2_t *)mmap(NULL, sizeof(struct data2_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if(sem == NULL){
+        connection_server_close();
         return 3;
     }
 
@@ -79,14 +81,14 @@ static int connection_client_setup()
     fd = shm_open(COMMON_FILE_NAME, O_RDWR, 0600);
     if (fd == -1)
     {
-        sem_close(sem);
-        sem_unlink(COMMON_FILE_NAME);
+        connection_client_close();
         return 2;
     }
-
+    
     pdata = (struct data2_t *)mmap(NULL, sizeof(struct data2_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
     if (pdata == NULL)
     {
+        connection_client_close();
         return 3;
     }
 
