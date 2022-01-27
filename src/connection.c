@@ -110,4 +110,5 @@ static int connection_server_close()
     close(fd);
     shm_unlink(COMMON_FILE_NAME);
     sem_close(sem);
+    sem_unlink(COMMON_SEMAPHORE_NAME);
 }
