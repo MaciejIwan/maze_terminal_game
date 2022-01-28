@@ -120,9 +120,17 @@ static int connection_server_close()
     sem_unlink(FILE_S_WRITE_TO_SEM);
 }
 
-int connection_push(sem_t *sem, void* dest, void* data, size_t size){
+int connection_push(sem_t *sem, void* dest, void* src, size_t size){
     sem_wait(sem); // critique session start
-    memcpy(dest, data, size);
+    memcpy(dest, src, size);
+    sem_post(sem); // critique session stop
+    return 0;
+}
+
+int connection_fetch(sem_t *sem, void* dest, void* src, size_t size){
+
+    sem_wait(sem); // critique session start (in shared memory)
+    memcpy(dest, src, size); // copy to local version of swap struct
     sem_post(sem); // critique session stop
 }
 //static int connection_fetch(){}

@@ -22,5 +22,5 @@ static int connection_client_close();
 
 // thread safe, using sem
 int connection_push(sem_t *sem, void* dest, void* data, size_t size);
-
+int connection_fetch(sem_t *sem, void* dest, void* src, size_t size);
 #endif // _COMMON_H_

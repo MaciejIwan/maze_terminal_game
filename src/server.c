@@ -4,30 +4,50 @@ sem_t *sem_s_write;
 int fd_s_write;
 struct data2_t *pdata_s_write;
 
-void deal_with_input(int *c, int *terminate, int *counter)
+void deal_with_input(int *c, int *terminate, int *round_number)
 {
     sem_wait(&pdata_c_write->cs);
 
-    *c = (*(int *)pdata_c_write->payload);
-    *counter = *counter + 1;
-    *terminate = *(int *)pdata_c_write->payload == 'q';
-    if(*c)
-        printf("[%03d:%03d]: %c\n", *counter, pdata_c_write->id, (char)*c);
+    *c = pdata_c_write->payload;
+    *round_number = *round_number + 1;
+    *terminate = *c == 'q';
+    if (*c)
+        printf("[%03d:%03d]: %c\n", *round_number, pdata_c_write->id, (char)*c);
 
     sem_post(&pdata_c_write->cs);
 }
+
+void send_data(void *src, const int *round_number)
+{
+    struct data2_t *data = (struct data2_t *)src;
+
+    size_t size = sizeof(char) * (ARENA_HEIGHT) * (ARENA_WIDTH);
+    extern char arena_map[ARENA_HEIGHT][ARENA_WIDTH];
+
+    memcpy(data->arena, arena_map, size);
+    data->round = *round_number;
+
+    connection_push(&pdata_s_write->cs, pdata_s_write, data, sizeof(struct data2_t));
+}
+
 void server()
 {
+    struct data2_t local_data;
+    memset(&local_data, 0, sizeof(struct data2_t));
+    connection_fetch(&pdata_s_write->cs, &local_data, pdata_s_write, sizeof(struct data2_t));
+    
+
     printf("Gotowe, czekam na klienta; pdata=%p...\n", (void *)pdata_c_write);
 
     int terminate = 0, round_number = 0, c = 0;
     while (!terminate)
     {
-        sem_wait(sem_c_write);
+        send_data(&local_data, &round_number);
 
+        sem_wait(sem_c_write); // wait for player / user data
         deal_with_input(&c, &terminate, &round_number);
-
         usleep(500 * MS);
-        sem_post(sem_s_write);
+        
+        sem_post(sem_s_write); // send singal to player "NEW DATA ARE WAITING"
     }
 }

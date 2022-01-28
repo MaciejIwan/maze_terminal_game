@@ -1,6 +1,6 @@
 #include "display.h"
 
-char arena_map[28][49] = {
+char arena_map[ARENA_HEIGHT][ARENA_WIDTH] = {
     "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
     "B            B           BBB        B          B",
     "B BB BBBBBBB B BBBBBBBBB     BBBBBB B BBB BBBB B",
@@ -31,7 +31,7 @@ char arena_map[28][49] = {
     "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
 };
 
-
+SCREEN_S G_SCR;
 
 void disp_init()
 {
@@ -44,15 +44,36 @@ void disp_init()
     noecho();             // dont print what user press
     keypad(stdscr, TRUE); // to detect arrow keys
 }
-void disp_close(){
+void disp_close()
+{
     endwin();
 }
-void game_screen(){
-
-}
-window_s *create_window(int height, int width, int y, int x)
+void draw_game_screen_layout()
 {
-    window_s *window = calloc(1, sizeof(window_s));
+    // 1st column
+    G_SCR.W[W_ARENA] = create_window(30, 50, 1, 2);
+    refresh();
+    // 2nd column
+    int col2_x = G_SCR.W[W_ARENA]->width + G_SCR.W[W_ARENA]->start_x + 2;
+    G_SCR.W[W_DISPLAY] = create_window(15, 54, 1, col2_x);
+    G_SCR.W[W_INFO] = create_window(12, 54, G_SCR.W[W_DISPLAY]->start_y + G_SCR.W[W_DISPLAY]->height, col2_x);
+    G_SCR.W[W_INPUT] = create_window(3, 54, G_SCR.W[W_INFO]->start_y + G_SCR.W[W_INFO]->height, col2_x);
+
+    for (size_t i = 0; i < W_MAX; i++)
+        wrefresh(G_SCR.W[i]->winptr);
+
+    // fill window with texts / map
+    draw_display(G_SCR.W[W_DISPLAY]);
+}
+
+void screen_layout_close(SCREEN_S *sc)
+{
+    for (size_t i = 0; i < W_MAX; i++)
+        destroy_window_s(sc->W[i]);
+}
+WINDOW_S *create_window(int height, int width, int y, int x)
+{
+    WINDOW_S *window = calloc(1, sizeof(WINDOW_S));
     if (!window)
     {
         errno = ENOMEM;
@@ -76,21 +97,53 @@ window_s *create_window(int height, int width, int y, int x)
     return window;
 }
 
-void destroy_window_s(window_s *data)
+void destroy_window_s(WINDOW_S *data)
 {
+    delwin(data->winptr);
     free(data);
 }
 
-void draw_map(window_s *win)
+void draw_display(WINDOW_S *win)
 {
-    for (int i = 1; i < win->height -1; i++)
+    mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 1, 2, "Full:		");
+    waddch(G_SCR.W[W_DISPLAY]->winptr, ACS_BLOCK);
+
+    mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 2, 2, "ckboard:	");
+    waddch(G_SCR.W[W_DISPLAY]->winptr, ACS_CKBOARD);
+
+    if (!sem_trywait(&pdata_s_write->cs))
     {
-        //mvwprintw(win->winptr, i, 1, "%.*s", win->width - 2, arena_map[i - 1]);
-        for (int j = 1; j < win->width-1; j++)
-            if(arena_map[i-1][j-1] == BLOCK_FULL)
+        mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 2, 2, "round:	%lld", pdata_s_write->round);
+        sem_post(&pdata_s_write->cs);
+        waddch(G_SCR.W[W_DISPLAY]->winptr, ACS_CKBOARD);
+    }
+
+    wrefresh(G_SCR.W[W_DISPLAY]->winptr);
+}
+
+void draw_input(char c)
+{
+    WINDOW* win = G_SCR.W[W_INPUT]->winptr;
+
+    wclear(win);
+    box(win, 0, 0);
+    mvwprintw(win, 1, 2, "Input: %c", c);
+    wrefresh(win);
+}
+
+void draw_map(WINDOW_S *win, struct data2_t *data)
+{
+    // int y,x;
+    for (int i = 1; i < win->height - 1; i++)
+    {
+        // mvwprintw(win->winptr, i, 1, "%.*s", win->width - 2, arena_map[i - 1]);
+        for (int j = 1; j < win->width - 1; j++)
+        {
+            if (data->arena[i - 1][j - 1] == BLOCK_FULL)
                 mvwaddch(win->winptr, i, j, ACS_CKBOARD);
             else
-                mvwaddch(win->winptr, i, j, arena_map[i-1][j-1]);
+                mvwaddch(win->winptr, i, j, data->arena[i - 1][j - 1]);
+        }
     }
     wrefresh(win->winptr);
 }

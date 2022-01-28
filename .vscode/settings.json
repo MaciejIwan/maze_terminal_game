@@ -4,6 +4,10 @@
         "ncurses.h": "c",
         "connection.h": "c",
         "signal.h": "c",
-        "errno.h": "c"
+        "errno.h": "c",
+        "key_listener.h": "c",
+        "client.h": "c",
+        "common.h": "c",
+        "display.h": "c"
     }
 }

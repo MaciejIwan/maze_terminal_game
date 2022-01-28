@@ -30,7 +30,7 @@
 
 #define SEC 1000 * 1000
 #define MS 1000
-#define PAYLOAD_SIZE 1024
+#define PAYLOAD_SIZE 2048
 
 #define FILE_C_WRITE_TO "C_SAVE_SHM"
 #define FILE_C_WRITE_TO_SEM "C_SAVE_SEM"
@@ -38,9 +38,10 @@
 #define FILE_S_WRITE_TO "S_SAVE_SHM"
 #define FILE_S_WRITE_TO_SEM "S_SAVE_SEM"
 
+#define ARENA_WIDTH 49
+#define ARENA_HEIGHT 28
 
 enum CLIENT_TYPES {TYPE_HOST, TYPE_CLIENT};
-
 
 extern sem_t *sem_c_write;
 extern int fd_c_write;
@@ -50,7 +51,9 @@ struct data2_t {
     sem_t cs; // sekcja krytyczna
     pid_t owner_pid;
     int id;
-    char payload[PAYLOAD_SIZE];
+    long long round;
+    int payload;
+    char arena[28][49];
 };
 
 static void err(int c, const char* msg) {
