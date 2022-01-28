@@ -4,13 +4,14 @@ int last_key;
 pthread_t klistener_th;
 pthread_mutex_t klistener_mutex;
 
-
 int key_listener_get()
 {
-    int temp_key;
+    int temp_key = 0;
 
+    // if (pthread_mutex_trylock(&klistener_mutex) == 0){
     pthread_mutex_lock(&klistener_mutex);
     temp_key = last_key;
+    last_key = 0;
     pthread_mutex_unlock(&klistener_mutex);
 
     return temp_key;
@@ -18,6 +19,7 @@ int key_listener_get()
 
 static void ket_listener_set(int value)
 {
+    // if (pthread_mutex_trylock(&klistener_mutex) == 0){
     pthread_mutex_lock(&klistener_mutex);
     last_key = value;
     pthread_mutex_unlock(&klistener_mutex);

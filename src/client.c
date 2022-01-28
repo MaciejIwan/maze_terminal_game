@@ -1,35 +1,43 @@
 #include "client.h"
 
+sem_t *sem_c_write;
+int fd_c_write;
+struct data2_t *pdata_c_write;
+
+void send_key_data(int *c, int *my_id)
+{
+    *c = key_listener_get(); // fetch newest data
+    connection_push(&pdata_c_write->cs, pdata_c_write->payload, c, sizeof(int));
+}
+
 void client()
 {
-    win_init();
+    disp_init();
     key_listener_init();
     srand(time(NULL));
     int my_id = rand() % 1000;
-    
-    mvprintw(1, 1, "Identyfikator sesji: %d; pdata=%p......\n", my_id, (void *)pdata);
+
+    mvprintw(1, 1, "Identyfikator sesji: %d; pdata=%p......\n", my_id, (void *)pdata_c_write);
     refresh();
 
-    while (1)
+    int terminate = 0, counter = 0, c = 0;
+    while (!terminate)
     {
-        int res, p;
+        int res;
         char msg[PAYLOAD_SIZE];
 
-        mvprintw(2, 1,"Podaj tekst: ");
+        mvprintw(2, 1, "Podaj tekst %d: ", counter); // draw game arena
         refresh();
 
+        sem_wait(sem_s_write); // wait until server dont ask you
 
-        p = key_listener_get();
+        send_key_data(&c, &my_id);
 
-        res = sem_wait(&pdata->cs); // critique session start
-        memcpy(pdata->payload,&p,sizeof(int));
-        pdata->id = my_id;
-        res = sem_post(&pdata->cs); // critique session stop
+        sem_post(sem_c_write); // let server know data are ready
 
-        res = sem_post(sem); // let server know data is ready
+        sem_getvalue(sem_c_write, &counter); // debug only
 
-        if (p == 'q')
-            break;
+        if (c == 'q')
+            terminate = 1;
     }
 }
-

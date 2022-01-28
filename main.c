@@ -24,9 +24,10 @@ int main()
 }
 
 
+
 // int main2()
 // {
-//     win_init();
+//     disp_init();
 //     connection_init();
 //     key_listener_init();
 

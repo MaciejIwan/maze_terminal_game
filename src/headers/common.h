@@ -24,23 +24,31 @@
 #include "server.h"
 #include "connection.h"
 #include "key_listener.h"
+#include "block_types.h"
 #include "display.h"
 
-#define FILE_C_SAVE_TO "/msg_data2"
-#define FILE_C_SAVE_TO_SEM "/msg_signal2"
+
 #define SEC 1000 * 1000
+#define MS 1000
+#define PAYLOAD_SIZE 1024
+
+#define FILE_C_WRITE_TO "C_SAVE_SHM"
+#define FILE_C_WRITE_TO_SEM "C_SAVE_SEM"
+
+#define FILE_S_WRITE_TO "S_SAVE_SHM"
+#define FILE_S_WRITE_TO_SEM "S_SAVE_SEM"
+
 
 enum CLIENT_TYPES {TYPE_HOST, TYPE_CLIENT};
 
 
-extern sem_t *sem;
-extern int fd;
-extern struct data2_t *pdata;
+extern sem_t *sem_c_write;
+extern int fd_c_write;
+extern struct data2_t *pdata_c_write;
 
-#define PAYLOAD_SIZE 1024
 struct data2_t {
     sem_t cs; // sekcja krytyczna
-    pid_t server_pid;
+    pid_t owner_pid;
     int id;
     char payload[PAYLOAD_SIZE];
 };
