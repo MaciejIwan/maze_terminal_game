@@ -57,7 +57,7 @@ static void err(int c, const char* msg) {
     if (!c)
         return;
     perror(msg);
-    //exit(1);
+    exit(1);
 }
 
 #endif // _COMMON_H_
