@@ -43,5 +43,5 @@ void client()
             terminate = 1;
     }
     disp_close();
-    fflush(stdout);
+    fflush(stdout); // safe for output streams // https://man7.org/linux/man-pages/man3/fflush.3p.html
 }
