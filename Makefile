@@ -18,7 +18,7 @@ rebuild: clean build
 
 build:
 	mkdir -p ${OUTDIR}
-	gcc  -g3 main.c ${SRC}/*.c -I${SRC}/headers  -lncurses -lrt -lpthread  -o ./${OUTDIR}/${OUTFILE} --disable-leaks
+	gcc  -g3 main.c ${SRC}/*.c -I${SRC}/headers -lncurses -lrt -lpthread  -o ./${OUTDIR}/${OUTFILE} 
 
 run:
 	./${OUTDIR}/${OUTFILE}
@@ -26,7 +26,7 @@ run:
 build_run : clean build run
 
 valgrind: build
-	valgrind --leak-check=full --show-leak-kinds=all -s ./${OUTDIR}/${OUTFILE}
+	valgrind --leak-check=full --show-leak-kinds=all -s ./${OUTDIR}/${OUTFILE} --disable-leaks
 
 clean: 
 	rm -r -f build
