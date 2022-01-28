@@ -15,3 +15,7 @@ Install before compilation (on ubuntu):
 to clear terminal mesh after game crash use:
     stty sane
     if {ENTER} dosnt work use: stty sane ^J {CTRL + J}
+
+Good for debug:
+    watch -n 1 ls /dev/shm
+    rm /dev/shm/C_SAVE_SHM /dev/shm/sem.C_SAVE_SEM /dev/shm/S_SAVE_SHM /dev/shm/sem.S_SAVE_SEM
