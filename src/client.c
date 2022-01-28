@@ -43,5 +43,7 @@ void client()
             terminate = 1;
     }
     disp_close();
-    fflush(stdout); // safe for output streams // https://man7.org/linux/man-pages/man3/fflush.3p.html
+    //_nc_freeall(); // free all memory allocated by ncurses
+    exit_curses(3);
+    fflush(stdout); // safe for output streams (remove mesh after ncurses) // https://man7.org/linux/man-pages/man3/fflush.3p.html
 }

@@ -18,8 +18,8 @@ rebuild: clean build
 
 build:
 	mkdir -p ${OUTDIR}
-	gcc -g3  -I${SRC}/headers ${SRC}/*.c ${SRC}/headers/*.h main.c -lncurses -lrt -lpthread -o ./${OUTDIR}/${OUTFILE}
-	
+	gcc  -g3 main.c ${SRC}/*.c -I${SRC}/headers  -lncurses -lrt -lpthread  -o ./${OUTDIR}/${OUTFILE} --disable-leaks
+
 run:
 	./${OUTDIR}/${OUTFILE}
 
