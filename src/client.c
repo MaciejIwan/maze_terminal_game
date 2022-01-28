@@ -24,11 +24,9 @@ void client()
     key_listener_init();
 
 
-    int terminate = 0, counter = 0, counter2 = 0, c = 0;
+    int terminate = 0, c = 0;
     while (!terminate)
     {
-        int res;
-        char msg[PAYLOAD_SIZE];
 
         sem_wait(sem_s_write); // wait until server dont ask you
 

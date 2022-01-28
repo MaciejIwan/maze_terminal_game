@@ -59,7 +59,7 @@ struct data2_t {
     PLAYER player;
 };
 
-static void err(int c, const char* msg) {
+inline static void err(int c, const char* msg) {
     if (!c)
         return;
     perror(msg);

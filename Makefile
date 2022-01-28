@@ -18,7 +18,7 @@ rebuild: clean build
 
 build:
 	mkdir -p ${OUTDIR}
-	gcc -g3 main.c ${SRC}/*.c -I${SRC}/headers -lncurses -lrt -lpthread  -o ./${OUTDIR}/${OUTFILE} 
+	gcc -g3 -Wall -pedantic main.c ${SRC}/*.c -I${SRC}/headers -lncurses -lrt -lpthread  -o ./${OUTDIR}/${OUTFILE} 
 
 run:
 	./${OUTDIR}/${OUTFILE}

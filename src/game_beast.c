@@ -15,6 +15,8 @@ BEAST* beast_spawn(){
     beast->last_move = STAY;
     beast->kills = 0;
 
+    
+    return beast;
 }
 
 void beast_kill(BEAST * beast){

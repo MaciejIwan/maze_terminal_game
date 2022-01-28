@@ -40,8 +40,7 @@ void server()
     printf("Gotowe, czekam na klienta; pdata=%p...\n", (void *)pdata_c_write);
 
     int terminate = 0, round_number = 0, 
-        player_input = 0,
-        server_input = 0;
+        player_input = 0;
     while (!terminate)
     {
         send_data(&local_data, &round_number);

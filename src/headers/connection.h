@@ -15,10 +15,7 @@ extern int CLIENT_TYPE;
 void connection_init(); // deal with server and host
 void connection_close();// deal with server and host
 
-static int connection_client_setup();
-static int connection_server_setup();
-static int connection_server_close();
-static int connection_client_close();
+
 
 // thread safe, using sem
 int connection_push(sem_t *sem, void* dest, void* data, size_t size);

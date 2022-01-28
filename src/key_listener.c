@@ -1,5 +1,8 @@
 #include "key_listener.h"
 
+static void *key_listener(void *args);
+static void ket_listener_set(int value);
+
 int last_key;
 pthread_t klistener_th;
 pthread_mutex_t klistener_mutex;

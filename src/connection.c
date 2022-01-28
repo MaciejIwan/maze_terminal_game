@@ -1,5 +1,9 @@
 #include "connection.h"
 
+static int connection_client_setup();
+static int connection_server_setup();
+static void connection_server_close();
+static void connection_client_close();
 
 void connection_init()
 {
@@ -93,7 +97,7 @@ static int connection_client_setup()
     return 0;
 }
 
-static int connection_client_close()
+static void connection_client_close()
 {
     sem_close(sem_c_write);
     sem_close(sem_s_write);
@@ -102,7 +106,7 @@ static int connection_client_close()
     close(fd_c_write);
     close(fd_s_write);
 }
-static int connection_server_close()
+static void connection_server_close()
 {
     munmap(pdata_c_write, sizeof(struct data2_t));
     munmap(pdata_s_write, sizeof(struct data2_t));
@@ -132,5 +136,6 @@ int connection_fetch(sem_t *sem, void* dest, void* src, size_t size){
     sem_wait(sem); // critique session start (in shared memory)
     memcpy(dest, src, size); // copy to local version of swap struct
     sem_post(sem); // critique session stop
+    return 0;
 }
 //static int connection_fetch(){}
