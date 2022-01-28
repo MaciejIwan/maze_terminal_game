@@ -4,16 +4,17 @@ sem_t *sem_c_write;
 int fd_c_write;
 struct data2_t *pdata_c_write;
 
-void send_key_data(int *c, int *my_id)
+void send_key_data(int *c)
 {
     *c = key_listener_get(); // fetch newest data
+    int pid = getpid();
     connection_push(&pdata_c_write->cs, &pdata_c_write->payload, c, sizeof(int));
-    connection_push(&pdata_c_write->cs, &pdata_c_write->id, my_id, sizeof(int));
+    connection_push(&pdata_c_write->cs, &pdata_c_write->id, &pid, sizeof(int));
 }
 
 void client()
 {
-    srand(time(NULL));
+
     extern SCREEN_S G_SCR;
     struct data2_t local_data;
     memset(&local_data, 0, sizeof(struct data2_t));
@@ -22,11 +23,6 @@ void client()
     draw_game_screen_layout();
     key_listener_init();
 
-    int my_id = rand() % 1000;
-
-    mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 4, 2, "Identyfikator sesji: %d", my_id);
-    mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 5, 2, "pdata=%p", (void *)pdata_c_write);
-    wrefresh(G_SCR.W[W_DISPLAY]->winptr);
 
     int terminate = 0, counter = 0, counter2 = 0, c = 0;
     while (!terminate)
@@ -37,15 +33,12 @@ void client()
         sem_wait(sem_s_write); // wait until server dont ask you
 
         connection_fetch(&pdata_s_write->cs, &local_data, pdata_s_write, sizeof(struct data2_t));
-        send_key_data(&c, &my_id);
+        send_key_data(&c);
 
         sem_post(sem_c_write); // let server know data are ready
 
-        sem_getvalue(sem_c_write, &counter);  // debug only
-        sem_getvalue(sem_s_write, &counter2); // debug only
-
         draw_map(G_SCR.W[W_ARENA], &local_data);
-        draw_display(G_SCR.W[W_DISPLAY]);
+        draw_display(G_SCR.W[W_DISPLAY], &local_data);
         draw_input(c);
 
         if (c == 'q')

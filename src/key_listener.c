@@ -34,6 +34,8 @@ static void *key_listener(void *args)
     {
         temp_key = getch();
         ket_listener_set(temp_key);
+        if(temp_key == 'q')
+            pthread_exit(NULL);
     }
 }
 

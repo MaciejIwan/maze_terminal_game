@@ -7,17 +7,17 @@ char arena_map[ARENA_HEIGHT][ARENA_WIDTH] = {
     "B BB B     B   BB        BBB BB   B B BB   BBB B",
     "B BB B B## B B BB BBBBBB BBB#BB B   B   B BB   B",
     "B BB B BBBBB B BB B           B BBBBB BBBBBBBB B",
-    "B BB #       B ## B BBBBBBBBB B       B        B",
+    "B BB #       B ##   BBBBBBBBB B       B        B",
     "B BB BBBBBBBBB BB B           B B###BBB BBB BB B",
     "B BB           BB BBB B A B BBB B       BB   B B",
     "B BBBBBBBBB BB BB     B#B#B BBB B BBB###BBB BB B",
     "B        BB BB BBBBBB BBBBB                    B",
-    "BBB BBBB BB BB         B     BBBBBBBBBBBBB BBB B",
-    "BBB BBBB BB BBBBBBBBBB B B BB             B    B",
+    "BBB BBBB BB BB         B    BBBBBBBBBBBBBB BBB B",
+    "BBB BBBB BB BBBBBBBBBB B B BB             #    B",
     "B                      B B BB BBBB BBBBBB B#BB B",
     "BBBBB####BBBB BBB BBBB B B BB BBBB B      BB   B",
     "BBBBB    BBBB BBB BBBB B B    #    B BBBBB   BBB",
-    "B                      B B BB BBBB B   BBBBBBBBB",
+    "B                      B B BB BBBB B   BBBBB BBB",
     "B BBBBBBBBBBBBBB B BBB #   BB      BBBB        B",
     "B              B B BBB BBBBBB BB BBB BB BBBBBB B",
     "BBBBBBBBBBBBBB   B             B            BB B",
@@ -63,7 +63,8 @@ void draw_game_screen_layout()
         wrefresh(G_SCR.W[i]->winptr);
 
     // fill window with texts / map
-    draw_display(G_SCR.W[W_DISPLAY]);
+    draw_display(G_SCR.W[W_DISPLAY], NULL);
+    draw_info();
 }
 
 void screen_layout_close(SCREEN_S *sc)
@@ -103,30 +104,37 @@ void destroy_window_s(WINDOW_S *data)
     free(data);
 }
 
-void draw_display(WINDOW_S *win)
+void draw_display(WINDOW_S *win, const struct data2_t* local_data)
 {
-    mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 1, 2, "Full:		");
-    waddch(G_SCR.W[W_DISPLAY]->winptr, ACS_BLOCK);
 
-    mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 2, 2, "ckboard:	");
-    waddch(G_SCR.W[W_DISPLAY]->winptr, ACS_CKBOARD);
+    mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 1, 2, " SPID:  %14d", local_data ? local_data->owner_pid : 0);
+    mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 2, 2, " CPID:  %14d", getpid());
+    mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 3, 2, "pdata:  %p", (void *)pdata_c_write);
 
     if (!sem_trywait(&pdata_s_write->cs))
     {
-        mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 2, 2, "round:	%lld", pdata_s_write->round);
+        mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 4, 2, "round:	 %7ld", (long)pdata_s_write->round);
         sem_post(&pdata_s_write->cs);
         waddch(G_SCR.W[W_DISPLAY]->winptr, ACS_CKBOARD);
     }
 
     wrefresh(G_SCR.W[W_DISPLAY]->winptr);
 }
+ void draw_info(){
+    WINDOW* win = G_SCR.W[W_INFO]->winptr;
+    wclear(win);
+    box(win, 0, 0);
+
+    mvwprintw(win, 1, 2, "Use Arrows to move");
+    wrefresh(win);
+}
 
 void draw_input(char c)
 {
     WINDOW* win = G_SCR.W[W_INPUT]->winptr;
 
-    wclear(win);
-    box(win, 0, 0);
+    //wclear(win);
+    //box(win, 0, 0);
     mvwprintw(win, 1, 2, "Input: %c", c);
     wrefresh(win);
 }

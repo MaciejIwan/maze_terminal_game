@@ -41,8 +41,10 @@ void destroy_window_s(WINDOW_S *data);
 
 void draw_game_screen_layout();
 void screen_layout_close(SCREEN_S *sc);
+
+void draw_display(WINDOW_S *win, const struct data2_t* local_data);
+ void draw_info();
 void draw_input(char c);
-void draw_display(WINDOW_S *win);
 void draw_map(WINDOW_S *win, struct data2_t* data); //void draw_map(WINDOW_S *win, char (*arena)[ARENA_WIDTH]);
 
 #endif // _DISPLAY_H_

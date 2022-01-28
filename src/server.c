@@ -39,13 +39,15 @@ void server()
 
     printf("Gotowe, czekam na klienta; pdata=%p...\n", (void *)pdata_c_write);
 
-    int terminate = 0, round_number = 0, c = 0;
+    int terminate = 0, round_number = 0, 
+        player_input = 0,
+        server_input = 0;
     while (!terminate)
     {
         send_data(&local_data, &round_number);
 
         sem_wait(sem_c_write); // wait for player / user data
-        deal_with_input(&c, &terminate, &round_number);
+        deal_with_input(&player_input, &terminate, &round_number);
         usleep(500 * MS);
         
         sem_post(sem_s_write); // send singal to player "NEW DATA ARE WAITING"

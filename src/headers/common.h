@@ -20,13 +20,15 @@
 #include <signal.h>
 
 
+#include "game_block_types.h"
+#include "game_characters.h"
+
+#include "key_listener.h"
+#include "connection.h"
+#include "display.h"
 #include "client.h"
 #include "server.h"
-#include "connection.h"
-#include "key_listener.h"
-#include "block_types.h"
-#include "display.h"
-
+#include "game_beast.h"
 
 #define SEC 1000 * 1000
 #define MS 1000
@@ -51,9 +53,10 @@ struct data2_t {
     sem_t cs; // sekcja krytyczna
     pid_t owner_pid;
     int id;
-    long long round;
     int payload;
+    long long round;
     char arena[28][49];
+    PLAYER player;
 };
 
 static void err(int c, const char* msg) {
