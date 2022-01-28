@@ -35,6 +35,7 @@ char arena_map[28][49] = {
 
 void disp_init()
 {
+    system("resize -s 32 110"); // set deafult window size
     setlocale(LC_ALL, "");
     initscr();
 

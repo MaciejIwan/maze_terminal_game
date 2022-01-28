@@ -20,12 +20,12 @@ void server()
 {
     printf("Gotowe, czekam na klienta; pdata=%p...\n", (void *)pdata_c_write);
 
-    int terminate = 0, counter = 0, c = 0;
+    int terminate = 0, round_number = 0, c = 0;
     while (!terminate)
     {
         sem_wait(sem_c_write);
 
-        deal_with_input(&c, &terminate, &counter);
+        deal_with_input(&c, &terminate, &round_number);
 
         usleep(500 * MS);
         sem_post(sem_s_write);
