@@ -42,4 +42,6 @@ void client()
         if (c == 'q')
             terminate = 1;
     }
+    disp_close();
+    fflush(stdout);
 }
