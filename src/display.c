@@ -44,7 +44,12 @@ void disp_init()
     noecho();             // dont print what user press
     keypad(stdscr, TRUE); // to detect arrow keys
 }
+void disp_close(){
+    endwin();
+}
+void game_screen(){
 
+}
 window_s *create_window(int height, int width, int y, int x)
 {
     window_s *window = calloc(1, sizeof(window_s));

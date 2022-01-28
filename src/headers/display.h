@@ -12,6 +12,7 @@ typedef struct
 } window_s;
 
 void disp_init();
+void disp_close();
 window_s *create_window(int height, int width, int y, int x);
 void destroy_window_s(window_s *data);
 
