@@ -11,3 +11,7 @@ Before run install: xterm # to resize terminal size ncurses # to display windows
 Install before compilation (on ubuntu):
     sudo apt install xterm
     sudo apt-get install libncurses5-dev libncursesw5-dev
+
+to clear terminal mesh after game crash use:
+    stty sane
+    if {ENTER} dosnt work use: stty sane ^J {CTRL + J}
