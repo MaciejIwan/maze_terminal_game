@@ -10,6 +10,7 @@
         "common.h": "c",
         "display.h": "c",
         "game_beast.h": "c",
-        "game_characters.h": "c"
+        "game_characters.h": "c",
+        "game_block_types.h": "c"
     }
 }

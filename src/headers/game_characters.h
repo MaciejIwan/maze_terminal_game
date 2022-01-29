@@ -23,12 +23,16 @@ typedef struct economy
     int eq;   // cash in eq
 } ECONOMY;
 
+typedef struct {
+    int x, y; // cordinates
+} CORDS;
+
 typedef struct
 {
     int id;
-    int x, y; // cordinates
+    CORDS positon;
     PLAYER_TYPE type;
-
+    bool blocked; // could be blocked in bush block
     union
     {
         struct
@@ -45,6 +49,6 @@ typedef struct
         };
     };
 
-} PLAYER, BOT, BEAST;
+} PLAYER, BOT, BEAST, CHARACTERS;
 
 #endif // _GAME_CHARACTERS_H_

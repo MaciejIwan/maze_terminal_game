@@ -10,8 +10,8 @@ BEAST* beast_spawn(){
 
     beast->id = -1;
     beast->type = PLAYER_BEAST;
-    beast->x = 25;
-    beast->y = 5;
+    beast->positon.x = 25;
+    beast->positon.y = 5;
     beast->last_move = STAY;
     beast->kills = 0;
 

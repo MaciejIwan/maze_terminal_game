@@ -3,6 +3,20 @@
 
 #if !defined(_COMMON_H_)
 #define _COMMON_H_
+
+#define SEC 1000 * 1000
+#define MS 1000
+#define PAYLOAD_SIZE 2048
+
+#define FILE_C_WRITE_TO "C_SAVE_SHM"
+#define FILE_C_WRITE_TO_SEM "C_SAVE_SEM"
+
+#define FILE_S_WRITE_TO "S_SAVE_SHM"
+#define FILE_S_WRITE_TO_SEM "S_SAVE_SEM"
+
+#define ARENA_WIDTH 49
+#define ARENA_HEIGHT 28
+
  // common file
 #include <stdio.h>
 #include <errno.h>
@@ -18,10 +32,10 @@
 #include <locale.h> /* for LC_ALL */
 #include <ncurses.h>
 #include <signal.h>
+#include <stdbool.h>
 
-
-#include "game_block_types.h"
 #include "game_characters.h"
+#include "game_block_types.h"
 
 #include "key_listener.h"
 #include "connection.h"
@@ -30,18 +44,8 @@
 #include "server.h"
 #include "game_beast.h"
 
-#define SEC 1000 * 1000
-#define MS 1000
-#define PAYLOAD_SIZE 2048
 
-#define FILE_C_WRITE_TO "C_SAVE_SHM"
-#define FILE_C_WRITE_TO_SEM "C_SAVE_SEM"
 
-#define FILE_S_WRITE_TO "S_SAVE_SHM"
-#define FILE_S_WRITE_TO_SEM "S_SAVE_SEM"
-
-#define ARENA_WIDTH 49
-#define ARENA_HEIGHT 28
 
 enum CLIENT_TYPES {TYPE_HOST, TYPE_CLIENT};
 
