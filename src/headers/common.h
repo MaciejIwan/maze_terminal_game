@@ -46,7 +46,7 @@
 
 
 
-
+// s
 enum CLIENT_TYPES {TYPE_HOST, TYPE_CLIENT};
 
 extern sem_t *sem_c_write;
