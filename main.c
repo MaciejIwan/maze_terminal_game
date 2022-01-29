@@ -5,7 +5,7 @@ int CLIENT_TYPE = 1;
 int main()
 {
     srand(time(NULL));
-    printf("Hello world! %d\n", (int)sizeof(struct data2_t));
+    printf("Hello world! %d\n", (int)sizeof(struct SERVER_OUTPUT));
     connection_init(); // deal with 2 cases, server and client
 
     switch (CLIENT_TYPE)

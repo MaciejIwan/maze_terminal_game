@@ -51,9 +51,9 @@ enum CLIENT_TYPES {TYPE_HOST, TYPE_CLIENT};
 
 extern sem_t *sem_c_write;
 extern int fd_c_write;
-extern struct data2_t *pdata_c_write;
+extern struct USER_INPUT *pdata_c_write;
 
-struct data2_t {
+struct SERVER_OUTPUT {
     sem_t cs; // sekcja krytyczna
     pid_t owner_pid;
     int id;
@@ -62,6 +62,14 @@ struct data2_t {
     char arena[28][49];
     PLAYER player;
 };
+
+typedef struct USER_INPUT
+ {
+    sem_t cs;        // semafor to sync
+    pid_t owner_pid; // always server PID
+    pid_t client_pid;// client PID
+    int input;
+} USER_INPUT_T;
 
 inline static void err(int c, const char* msg) {
     if (!c)

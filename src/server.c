@@ -2,24 +2,24 @@
 
 sem_t *sem_s_write;
 int fd_s_write;
-struct data2_t *pdata_s_write;
+struct SERVER_OUTPUT *pdata_s_write;
 
 void deal_with_input(int *c, int *terminate, int *round_number)
 {
     sem_wait(&pdata_c_write->cs);
 
-    *c = pdata_c_write->payload;
+    *c = pdata_c_write->input;
     *round_number = *round_number + 1;
     *terminate = *c == 'q';
     if (*c)
-        printf("[%03d:%03d]: %c\n", *round_number, pdata_c_write->id, (char)*c);
+        printf("[%03d:%03d]: %c\n", *round_number, pdata_c_write->client_pid, (char)*c);
 
     sem_post(&pdata_c_write->cs);
 }
 
 void send_data(void *src, const int *round_number)
 {
-    struct data2_t *data = (struct data2_t *)src;
+    struct SERVER_OUTPUT *data = (struct SERVER_OUTPUT *)src;
 
     size_t size = sizeof(char) * (ARENA_HEIGHT) * (ARENA_WIDTH);
     extern char arena_map[ARENA_HEIGHT][ARENA_WIDTH];
@@ -27,20 +27,20 @@ void send_data(void *src, const int *round_number)
     memcpy(data->arena, arena_map, size);
     data->round = *round_number;
 
-    connection_push(&pdata_s_write->cs, pdata_s_write, data, sizeof(struct data2_t));
+    connection_push(&pdata_s_write->cs, pdata_s_write, data, sizeof(struct SERVER_OUTPUT));
 }
 
 void server()
 {
-    struct data2_t local_swap_data;
+    struct SERVER_OUTPUT local_swap_data;
     PLAYER local_player;
     PLAYER online_player;
 
     memset(&online_player, 0, sizeof(PLAYER));
     memset(&local_player, 0, sizeof(PLAYER));
-    memset(&local_swap_data, 0, sizeof(struct data2_t));
+    memset(&local_swap_data, 0, sizeof(struct SERVER_OUTPUT));
 
-    connection_fetch(&pdata_s_write->cs, &local_swap_data, pdata_s_write, sizeof(struct data2_t));
+    connection_fetch(&pdata_s_write->cs, &local_swap_data, pdata_s_write, sizeof(struct SERVER_OUTPUT));
 
     WORLD_T *world = server_world_generate();
     if (world == NULL)

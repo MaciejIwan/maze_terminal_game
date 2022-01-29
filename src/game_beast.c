@@ -23,7 +23,7 @@ void beast_kill(BEAST * beast){
     free(beast);
 }
 
-DIRECTION beast_pursuit(struct data2_t* local_data){
+DIRECTION beast_pursuit(struct SERVER_OUTPUT* local_data){
     // check if player is reachable, if yes try to catch him
     // if not go to random direction, but continue last direction until block (end of tunel or someting)
     return (rand() % STAY);

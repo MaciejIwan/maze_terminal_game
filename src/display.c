@@ -104,7 +104,7 @@ void destroy_window_s(WINDOW_S *data)
     free(data);
 }
 
-void draw_display(WINDOW_S *win, const struct data2_t* local_data)
+void draw_display(WINDOW_S *win, const struct SERVER_OUTPUT* local_data)
 {
 
     mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 1, 2, " SPID:  %14d", local_data ? local_data->owner_pid : 0);
@@ -139,7 +139,7 @@ void draw_input(char c)
     wrefresh(win);
 }
 
-void draw_map(WINDOW_S *win, struct data2_t *data)
+void draw_map(WINDOW_S *win, struct SERVER_OUTPUT *data)
 {
     // int y,x;
     for (int i = 1; i < win->height - 1; i++)

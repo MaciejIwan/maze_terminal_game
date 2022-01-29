@@ -52,10 +52,10 @@ static int connection_server_setup()
     if (fd_c_write == -1 || fd_s_write == -1)
         return connection_server_close(), 2;
 
-    ftruncate(fd_c_write, sizeof(struct data2_t));
-    ftruncate(fd_s_write, sizeof(struct data2_t));
-    pdata_c_write = (struct data2_t *)mmap(NULL, sizeof(struct data2_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd_c_write, 0);
-    pdata_s_write = (struct data2_t *)mmap(NULL, sizeof(struct data2_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd_s_write, 0);
+    ftruncate(fd_c_write, sizeof(struct USER_INPUT));
+    ftruncate(fd_s_write, sizeof(struct SERVER_OUTPUT));
+    pdata_c_write = (struct USER_INPUT *)mmap(NULL, sizeof(struct USER_INPUT), PROT_READ | PROT_WRITE, MAP_SHARED, fd_c_write, 0);
+    pdata_s_write = (struct SERVER_OUTPUT *)mmap(NULL, sizeof(struct SERVER_OUTPUT), PROT_READ | PROT_WRITE, MAP_SHARED, fd_s_write, 0);
     if(sem_c_write == NULL || sem_s_write == NULL)
         return  connection_server_close(), 3;
 
@@ -80,8 +80,8 @@ static int connection_client_setup()
     if (fd_c_write == -1 || fd_s_write == -1)
         return connection_server_close(), 2;
 
-    pdata_c_write = (struct data2_t *)mmap(NULL, sizeof(struct data2_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd_c_write, 0);
-    pdata_s_write = (struct data2_t *)mmap(NULL, sizeof(struct data2_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd_s_write, 0);
+    pdata_c_write = (struct USER_INPUT *)mmap(NULL, sizeof(struct USER_INPUT), PROT_READ | PROT_WRITE, MAP_SHARED, fd_c_write, 0);
+    pdata_s_write = (struct SERVER_OUTPUT *)mmap(NULL, sizeof(struct SERVER_OUTPUT), PROT_READ | PROT_WRITE, MAP_SHARED, fd_s_write, 0);
     if(sem_c_write == NULL || sem_s_write == NULL)
         return  connection_server_close(), 3;
 
@@ -101,15 +101,15 @@ static void connection_client_close()
 {
     sem_close(sem_c_write);
     sem_close(sem_s_write);
-    munmap(pdata_c_write, sizeof(struct data2_t));
-    munmap(pdata_s_write, sizeof(struct data2_t));
+    munmap(pdata_c_write, sizeof(struct USER_INPUT));
+    munmap(pdata_s_write, sizeof(struct SERVER_OUTPUT));
     close(fd_c_write);
     close(fd_s_write);
 }
 static void connection_server_close()
 {
-    munmap(pdata_c_write, sizeof(struct data2_t));
-    munmap(pdata_s_write, sizeof(struct data2_t));
+    munmap(pdata_c_write, sizeof(struct USER_INPUT));
+    munmap(pdata_s_write, sizeof(struct SERVER_OUTPUT));
 
     close(fd_c_write);
     close(fd_s_write);

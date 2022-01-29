@@ -11,7 +11,7 @@
     #define ARENA_HEIGHT 28
 #endif
     
-extern struct data2_t* data;
+extern struct SERVER_OUTPUT* data;
 
 enum windows_id
 {
@@ -42,9 +42,9 @@ void destroy_window_s(WINDOW_S *data);
 void draw_game_screen_layout();
 void screen_layout_close(SCREEN_S *sc);
 
-void draw_display(WINDOW_S *win, const struct data2_t* local_data);
+void draw_display(WINDOW_S *win, const struct SERVER_OUTPUT* local_data);
  void draw_info();
 void draw_input(char c);
-void draw_map(WINDOW_S *win, struct data2_t* data); //void draw_map(WINDOW_S *win, char (*arena)[ARENA_WIDTH]);
+void draw_map(WINDOW_S *win, struct SERVER_OUTPUT* data); //void draw_map(WINDOW_S *win, char (*arena)[ARENA_WIDTH]);
 
 #endif // _DISPLAY_H_

@@ -2,22 +2,22 @@
 
 sem_t *sem_c_write;
 int fd_c_write;
-struct data2_t *pdata_c_write;
+struct USER_INPUT *pdata_c_write;
 
 void send_key_data(int *c)
 {
     *c = key_listener_get(); // fetch newest data
     int pid = getpid();
-    connection_push(&pdata_c_write->cs, &pdata_c_write->payload, c, sizeof(int));
-    connection_push(&pdata_c_write->cs, &pdata_c_write->id, &pid, sizeof(int));
+    connection_push(&pdata_c_write->cs, &pdata_c_write->input, c, sizeof(int));
+    connection_push(&pdata_c_write->cs, &pdata_c_write->client_pid, &pid, sizeof(int));
 }
 
 void client()
 {
 
     extern SCREEN_S G_SCR;
-    struct data2_t local_data;
-    memset(&local_data, 0, sizeof(struct data2_t));
+    struct SERVER_OUTPUT local_data;
+    memset(&local_data, 0, sizeof(struct SERVER_OUTPUT));
 
     disp_init();
     draw_game_screen_layout();
@@ -30,7 +30,7 @@ void client()
 
         sem_wait(sem_s_write); // wait until server dont ask you
 
-        connection_fetch(&pdata_s_write->cs, &local_data, pdata_s_write, sizeof(struct data2_t));
+        connection_fetch(&pdata_s_write->cs, &local_data, pdata_s_write, sizeof(struct SERVER_OUTPUT));
         send_key_data(&c);
 
         sem_post(sem_c_write); // let server know data are ready

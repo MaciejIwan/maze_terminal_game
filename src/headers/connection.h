@@ -4,11 +4,11 @@
 
 extern sem_t *sem_c_write;
 extern int fd_c_write;
-extern struct data2_t *pdata_c_write;
+extern struct USER_INPUT *pdata_c_write;
 
 extern sem_t *sem_s_write;
 extern int fd_s_write;
-extern struct data2_t *pdata_s_write;
+extern struct SERVER_OUTPUT *pdata_s_write;
 
 extern int CLIENT_TYPE;
 
