@@ -82,6 +82,23 @@ static block_action_ptr block_match_action(char block_type){
     else
         return NULL;
 }
+int block_match_symbol(char blocktype){
+    int symbol = (int)blocktype;
+
+    if(blocktype == BLOCK_FULL)
+        symbol = ACS_CKBOARD;
+    
+    return symbol;
+}
+int block_match_move_type(char blocktype){
+
+    if(blocktype == BLOCK_FULL)
+        return 0; // cant move here
+    else if (blocktype == BLOCK_BUSHES)
+        return 1; // semi, bushes
+    else
+        return 2; // normal move
+}
 
 char block_change_type(CHUNK *chunk, char new_block_type, int treasure_value)
 {
@@ -95,6 +112,8 @@ char block_change_type(CHUNK *chunk, char new_block_type, int treasure_value)
 
     chunk->block.ID = new_block_type;
     chunk->block.treasure_value = treasure_value;
+    chunk->block.symbol = block_match_symbol(new_block_type);
     chunk->block.action = block_match_action(new_block_type);
+    chunk->block.move_permission = block_match_move_type(new_block_type);
     return old_block_type;
 }

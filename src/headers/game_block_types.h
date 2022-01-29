@@ -18,7 +18,9 @@ typedef int (*block_action_ptr)(void *);
 typedef struct
 {
     char ID;
+    int symbol;
     int treasure_value;
+    int move_permission; // 0 - not allowed, 1 - bush semi allowed (slowness), 2 move normally
     block_action_ptr action;
 } BLOCK;
 
@@ -26,6 +28,7 @@ typedef struct
 {
     BLOCK block;
     CORDS location;
+    bool is_free;
     int visitors_count;      // how many players beast on chunk;
     int visitors_max;        // how many players beast on chunk;
     CHARACTERS *visitors[3]; // to do on heap when more players
