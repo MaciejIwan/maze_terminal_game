@@ -25,6 +25,7 @@ typedef struct
 #define _CHUNK_BLOCK_TYPES_
 #endif
 
+
 typedef struct {
     CHUNK MAP[ARENA_HEIGHT][ARENA_WIDTH];
     PLAYER* players_online;
