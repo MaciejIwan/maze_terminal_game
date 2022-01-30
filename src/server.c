@@ -37,6 +37,7 @@ void send_data(WORLD_T *world, void *src, const int *round_number)
 void server()
 {
     struct SERVER_OUTPUT swap_online_player_copy;
+    struct SERVER_OUTPUT swap_local_player;
     PLAYER local_player;
     PLAYER online_player;
 
@@ -133,8 +134,8 @@ bool server_player_create(WORLD_T *world, PLAYER *player, char id)
 
     player->id = id;
     player->type = PLAYER_HUMAN;
-    player->positon = server_player_locate(world, id); // if not world spawn player in random place
-    // server_find_random_free_chunk(world, &player->positon);
+    //player->positon = server_player_locate(world, id); // if not world spawn player in random place
+    server_find_random_free_chunk(world, &player->positon);
     server_add_player_to_world(world, player);
     return true;
 }
@@ -338,7 +339,8 @@ bool server_player_move(WORLD_T *world, PLAYER *player, DIRECTION dir)
 
     block_action_ptr action = dest_chunk->block.action;
 
-    block_change_type(curr_chunk, BLOCK_BLANK, 0);
+    extern char arena_map[ARENA_HEIGHT][ARENA_WIDTH];
+    block_change_type(curr_chunk, arena_map[player->positon.y][player->positon.x], 0);
     server_player_move_change_p_pos(player, dir);
     server_place_player_on_map(dest_chunk, player);
 

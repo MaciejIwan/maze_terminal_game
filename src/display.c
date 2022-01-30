@@ -14,7 +14,7 @@ char arena_map[ARENA_HEIGHT][ARENA_WIDTH] = {
     "B        BB BB BBBBBB BBBBB                    B",
     "BBB BBBB BB BB         B    BBBBBBBBBBBBBB BBB B",
     "BBB BBBB BB BBBBBBBBBB B B BB             #    B",
-    "B          1           B B BB BBBB BBBBBB B#BB B",
+    "B                      B B BB BBBB BBBBBB B#BB B",
     "BBBBB####BBBB BBB BBBB B B BB BBBB B      BB   B",
     "BBBBB    BBBB BBB BBBB B B    #    B BBBBB   BBB",
     "B                      B B BB BBBB B   BBBBB BBB",
@@ -117,6 +117,7 @@ void draw_display(WINDOW_S *win, const struct SERVER_OUTPUT *local_data)
         sem_post(&pdata_s_write->cs);
         waddch(G_SCR.W[W_DISPLAY]->winptr, ACS_CKBOARD);
     }
+    mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 5, 2, "Cords:   y:%3d,  x:%3d", local_data ? local_data->player.positon.y : 0, local_data ? local_data->player.positon.x : 0);
 
     wrefresh(G_SCR.W[W_DISPLAY]->winptr);
 }
