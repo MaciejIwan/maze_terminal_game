@@ -61,6 +61,27 @@ int block_action_bushes(void  *data)
     return 0;
 }
 
+int block_action_beast(void  *data)
+{  
+    CHUNK *chunk = (CHUNK*)data;
+    if (chunk == NULL)
+        return 1;
+
+    return 0;
+}
+
+static block_action_ptr block_match_action(char block_type){
+    if(block_type == BLOCK_TREASURE || block_type == BLOCK_DROPED_TREASURE || block_type == BLOCK_LARGE_TREASURE || block_type == BLOCK_ONE_COIN)
+        return block_action_treasure;
+    else if (block_type == BLOCK_BUSHES)
+        return block_action_bushes;
+    else if (block_type == BLOCK_BANK)
+        return block_action_bank;
+    else if(block_type == BLOCK_BEAST)
+        return block_action_beast;
+    else
+        return NULL;
+}
 static int block_match_treasure_value(char block_type)
 {
     if (block_type == BLOCK_LARGE_TREASURE)
@@ -71,16 +92,6 @@ static int block_match_treasure_value(char block_type)
         return 1;
     else
         return 0;
-}
-static block_action_ptr block_match_action(char block_type){
-    if(block_type == BLOCK_TREASURE || block_type == BLOCK_DROPED_TREASURE || block_type == BLOCK_LARGE_TREASURE || block_type == BLOCK_ONE_COIN)
-        return block_action_treasure;
-    else if (block_type == BLOCK_BUSHES)
-        return block_action_bushes;
-    else if (block_type == BLOCK_BANK)
-        return block_action_bank;
-    else
-        return NULL;
 }
 int block_match_symbol(char blocktype){
     int symbol = (int)blocktype;
@@ -101,7 +112,7 @@ int block_match_move_type(char blocktype){
 }
 
 bool block_is_player(char new_block_type){
-    if(new_block_type >= '1' && new_block_type <= '2')
+    if((new_block_type >= '1' && new_block_type <= '2') || new_block_type == BLOCK_BEAST)
         return TRUE;
     else
         return FALSE;

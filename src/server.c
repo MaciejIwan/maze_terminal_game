@@ -6,7 +6,7 @@ struct SERVER_OUTPUT *pdata_s_write;
 extern SCREEN_S G_SCR;
 
 bool server_player_move(WORLD_T *world, PLAYER *player, DIRECTION dir);
-bool server_player_create(WORLD_T *world, PLAYER *player, char id);
+bool server_player_create(WORLD_T *world, PLAYER *player, char id, PLAYER_TYPE type);
 bool server_add_player_to_world(WORLD_T *world, PLAYER *player);
 CORDS server_player_locate(WORLD_T *world, char player_id);
 void generate_player_view(WORLD_T *world, struct SERVER_OUTPUT *dst);
@@ -24,6 +24,7 @@ void server()
     memset(&swap_local_player, 0, sizeof(struct SERVER_OUTPUT));
     PLAYER local_player;
     PLAYER online_player;
+    BEAST beast;
 
     connection_fetch(&pdata_s_write->cs, &swap_online_player_copy, pdata_s_write, sizeof(struct SERVER_OUTPUT));
 
@@ -35,8 +36,9 @@ void server()
     if (world == NULL)
         exit(2); // have to free all here }
 
-    server_player_create(world, &local_player, '1');
-    server_player_create(world, &online_player, '2');
+    server_player_create(world, &local_player, '1', PLAYER_HUMAN);
+    server_player_create(world, &online_player, '2', PLAYER_HUMAN);
+    server_player_create(world, &beast, '*', PLAYER_BEAST);
     server_swap_file_generator(world, &online_player, &swap_online_player_copy);
 
     printw("Gotowe, czekam na klienta; pdata=%p...\n", (void *)pdata_c_write);
@@ -176,7 +178,7 @@ void server_swap_file_generator(WORLD_T *world, PLAYER *player, struct SERVER_OU
     generate_player_view(world, output);
     memcpy(&output->player, player, sizeof(PLAYER));
 }
-bool server_player_create(WORLD_T *world, PLAYER *player, char id)
+bool server_player_create(WORLD_T *world, PLAYER *player, char id, enum player_type type)
 {
     if (player == NULL || world == NULL)
         return false;
@@ -184,7 +186,11 @@ bool server_player_create(WORLD_T *world, PLAYER *player, char id)
     memset(player, 0, sizeof(PLAYER));
 
     player->id = id;
-    player->type = PLAYER_HUMAN;
+    player->type = type;
+    if(player->type == PLAYER_BEAST){
+        player->kills = 0;
+        player->last_move = STAY;
+    }
     // player->positon = server_player_locate(world, id); // if not world spawn player in random place
     server_find_random_free_chunk(world, &player->positon);
     server_add_player_to_world(world, player);
@@ -211,7 +217,7 @@ DIRECTION key_to_direction(int k)
 void server_place_player_on_map(CHUNK *chunk, PLAYER *player)
 {
     chunk->visitors_count = 1;
-    chunk->visitors[player->id - '0'] = player;
+    chunk->visitors[player->id != '*' ? player->id - '0' : 2] = player;
     chunk->is_free = false;
     block_change_type(chunk, player->id, 0);
 }
@@ -231,6 +237,12 @@ bool server_add_player_to_world(WORLD_T *world, PLAYER *player)
     else if (world->online_player == NULL)
     {
         world->online_player = player;
+        CHUNK *cur_chunk = &world->MAP[player->positon.y][player->positon.x];
+        server_place_player_on_map(cur_chunk, player);
+        return TRUE;
+    }
+    else if (world->beast == NULL){
+        world->beast = player;
         CHUNK *cur_chunk = &world->MAP[player->positon.y][player->positon.x];
         server_place_player_on_map(cur_chunk, player);
         return TRUE;
@@ -399,4 +411,34 @@ bool server_player_move(WORLD_T *world, PLAYER *player, DIRECTION dir)
         (*action)(dest_chunk);
 
     return TRUE;
+}
+
+
+
+BEAST* beast_spawn(){
+
+    BEAST* beast = calloc(1, sizeof(BEAST));
+    if(beast == NULL){
+        errno = ENOMEM;
+        return NULL;
+    }
+
+    beast->id = -1;
+    beast->type = PLAYER_BEAST;
+    beast->positon.x = 25;
+    beast->positon.y = 5;
+    beast->last_move = STAY;
+    beast->kills = 0;
+
+    return beast;
+}
+
+void beast_kill(BEAST * beast){
+    free(beast);
+}
+
+DIRECTION beast_pursuit(WORLD_T* world){
+    // check if player is reachable, if yes try to catch him
+    // if not go to random direction, but continue last direction until block (end of tunel or someting)
+    return (rand() % STAY);
 }
