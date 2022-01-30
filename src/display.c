@@ -181,3 +181,31 @@ void draw_map(WINDOW_S *win, struct SERVER_OUTPUT *data)
     }
     wrefresh(win->winptr);
 }
+
+void draw_server_map(WINDOW_S *win, WORLD_T *data)
+{
+    // int y,x;
+    wclear(win->winptr);
+    box(win->winptr, 0, 0);
+
+    int viewport_h = ARENA_HEIGHT;
+    int viewport_w = ARENA_WIDTH;
+    int start_y = 0, start_x = 0;
+
+    for (int i = 1; i <= viewport_h; i++)
+    {
+
+        int j = 1;
+        wmove(win->winptr, start_y + i, start_x + j);
+        for (; j <= viewport_w; j++)
+        {
+
+            if (data->MAP[i - 1][j - 1].block.ID == BLOCK_FULL)
+                waddch(win->winptr, ACS_CKBOARD);
+            else
+                waddch(win->winptr, data->MAP[i - 1][j - 1].block.ID);
+        }
+    }
+
+    wrefresh(win->winptr);
+}

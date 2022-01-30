@@ -12,38 +12,19 @@ void generate_player_view(WORLD_T *world, struct SERVER_OUTPUT *dst);
 int server_find_random_free_chunk(WORLD_T *world, CORDS *ptr);
 void server_swap_file_generator(WORLD_T *world, PLAYER *player, struct SERVER_OUTPUT *output);
 DIRECTION key_to_direction(int k);
-void deal_with_input(int *key, int *terminate, int *round_number)
-{
-    sem_wait(&pdata_c_write->cs);
+void deal_with_input(int *key, int *terminate, int *round_number);
+void send_data(WORLD_T *world, void *src, const int *round_number);
 
-    *key = pdata_c_write->input;
-    *round_number = *round_number + 1;
-    *terminate = *key == 'q';
-    if (*key)
-        printf("[%03d:%03d]: %c\n", *round_number, pdata_c_write->client_pid, (char)*key);
 
-    sem_post(&pdata_c_write->cs);
-}
-
-void send_data(WORLD_T *world, void *src, const int *round_number)
-{
-    struct SERVER_OUTPUT *data = (struct SERVER_OUTPUT *)src;
-
-    data->round = *round_number;
-
-    connection_push(&pdata_s_write->cs, pdata_s_write, data, sizeof(struct SERVER_OUTPUT));
-}
 
 void server()
 {
     struct SERVER_OUTPUT swap_online_player_copy;
     struct SERVER_OUTPUT swap_local_player;
+    memset(&swap_online_player_copy, 0, sizeof(struct SERVER_OUTPUT));
+    memset(&swap_local_player, 0, sizeof(struct SERVER_OUTPUT));
     PLAYER local_player;
     PLAYER online_player;
-
-    memset(&online_player, 0, sizeof(PLAYER));
-    memset(&local_player, 0, sizeof(PLAYER));
-    memset(&swap_online_player_copy, 0, sizeof(struct SERVER_OUTPUT));
 
     connection_fetch(&pdata_s_write->cs, &swap_online_player_copy, pdata_s_write, sizeof(struct SERVER_OUTPUT));
 
@@ -74,6 +55,28 @@ void server()
     }
 
     server_world_destory(&world);
+}
+
+void deal_with_input(int *key, int *terminate, int *round_number)
+{
+    sem_wait(&pdata_c_write->cs);
+
+    *key = pdata_c_write->input;
+    *round_number = *round_number + 1;
+    *terminate = *key == 'q';
+    if (*key)
+        printf("[%03d:%03d]: %c\n", *round_number, pdata_c_write->client_pid, (char)*key);
+
+    sem_post(&pdata_c_write->cs);
+}
+
+void send_data(WORLD_T *world, void *src, const int *round_number)
+{
+    struct SERVER_OUTPUT *data = (struct SERVER_OUTPUT *)src;
+
+    data->round = *round_number;
+
+    connection_push(&pdata_s_write->cs, pdata_s_write, data, sizeof(struct SERVER_OUTPUT));
 }
 
 WORLD_T *server_world_generate()

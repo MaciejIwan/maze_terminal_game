@@ -30,7 +30,7 @@ typedef struct
 #define _CHUNK_BLOCK_TYPES_
 #endif
 
-
+#ifndef _WORLD_T_TYPE_
 typedef struct {
     CHUNK MAP[ARENA_HEIGHT][ARENA_WIDTH];
     PLAYER* online_player;
@@ -44,6 +44,9 @@ typedef struct {
 
     int max_players_on_server;
 } WORLD_T;
+
+#define _WORLD_T_TYPE_
+#endif
 
 WORLD_T* server_world_generate();
 void server_world_destory(WORLD_T** world);

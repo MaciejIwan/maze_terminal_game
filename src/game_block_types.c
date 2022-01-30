@@ -5,7 +5,7 @@ static block_action_ptr block_match_action(char block_type);
 static int block_match_treasure_value(char block_type);
 
 int block_action_bank(void  *data)
-{   
+{
     CHUNK *chunk = (CHUNK*)data;
     if (chunk == NULL)
         return 1;
@@ -25,7 +25,7 @@ int block_action_bank(void  *data)
 }
 
 int block_action_treasure(void  *data)
-{   
+{
     CHUNK *chunk = (CHUNK*)data;
     if (chunk == NULL)
         return 1;
