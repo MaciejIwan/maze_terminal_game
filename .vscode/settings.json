@@ -11,6 +11,7 @@
         "display.h": "c",
         "game_beast.h": "c",
         "game_characters.h": "c",
-        "game_block_types.h": "c"
+        "game_block_types.h": "c",
+        "cmath": "c"
     }
 }

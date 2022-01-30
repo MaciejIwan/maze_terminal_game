@@ -44,7 +44,7 @@ void screen_layout_close(SCREEN_S *sc);
 
 void draw_display(WINDOW_S *win, const struct SERVER_OUTPUT* local_data);
  void draw_info();
-void draw_input(char c);
+void draw_input(int c);
 void draw_map(WINDOW_S *win, struct SERVER_OUTPUT* data); //void draw_map(WINDOW_S *win, char (*arena)[ARENA_WIDTH]);
 
 #endif // _DISPLAY_H_

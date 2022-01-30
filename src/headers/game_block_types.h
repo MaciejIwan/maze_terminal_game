@@ -42,5 +42,5 @@ int block_action_bank(void *data);
 int block_action_bushes(void *data);
 
 char block_change_type(CHUNK *chunk, char new_block_type, int treasure_value);
-
+bool block_is_player(char new_block_type);
 #endif // _BLOCK_TYPES_H_

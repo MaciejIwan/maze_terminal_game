@@ -46,7 +46,6 @@
 
 
 
-// s
 enum CLIENT_TYPES {TYPE_HOST, TYPE_CLIENT};
 
 extern sem_t *sem_c_write;
@@ -56,11 +55,14 @@ extern struct USER_INPUT *pdata_c_write;
 struct SERVER_OUTPUT {
     sem_t cs; // sekcja krytyczna
     pid_t owner_pid;
-    int id;
-    int payload;
-    long long round;
-    char arena[28][49];
+    int round;
+
     PLAYER player;
+
+    char arena[6][6];
+    int viewport_h;
+    int viewport_w;
+    CORDS viewport_start;
 };
 
 typedef struct USER_INPUT

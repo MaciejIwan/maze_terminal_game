@@ -14,7 +14,7 @@ char arena_map[ARENA_HEIGHT][ARENA_WIDTH] = {
     "B        BB BB BBBBBB BBBBB                    B",
     "BBB BBBB BB BB         B    BBBBBBBBBBBBBB BBB B",
     "BBB BBBB BB BBBBBBBBBB B B BB             #    B",
-    "B                      B B BB BBBB BBBBBB B#BB B",
+    "B          1           B B BB BBBB BBBBBB B#BB B",
     "BBBBB####BBBB BBB BBBB B B BB BBBB B      BB   B",
     "BBBBB    BBBB BBB BBBB B B    #    B BBBBB   BBB",
     "B                      B B BB BBBB B   BBBBB BBB",
@@ -104,7 +104,7 @@ void destroy_window_s(WINDOW_S *data)
     free(data);
 }
 
-void draw_display(WINDOW_S *win, const struct SERVER_OUTPUT* local_data)
+void draw_display(WINDOW_S *win, const struct SERVER_OUTPUT *local_data)
 {
 
     mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 1, 2, " SPID:  %14d", local_data ? local_data->owner_pid : 0);
@@ -120,8 +120,9 @@ void draw_display(WINDOW_S *win, const struct SERVER_OUTPUT* local_data)
 
     wrefresh(G_SCR.W[W_DISPLAY]->winptr);
 }
- void draw_info(){
-    WINDOW* win = G_SCR.W[W_INFO]->winptr;
+void draw_info()
+{
+    WINDOW *win = G_SCR.W[W_INFO]->winptr;
     wclear(win);
     box(win, 0, 0);
 
@@ -129,28 +130,52 @@ void draw_display(WINDOW_S *win, const struct SERVER_OUTPUT* local_data)
     wrefresh(win);
 }
 
-void draw_input(char c)
+void draw_input(int c)
 {
-    WINDOW* win = G_SCR.W[W_INPUT]->winptr;
+    WINDOW *win = G_SCR.W[W_INPUT]->winptr;
 
-    //wclear(win);
-    //box(win, 0, 0);
-    mvwprintw(win, 1, 2, "Input: %c", c);
+    wclear(win);
+    box(win, 0, 0);
+    switch (c)
+    {
+    case KEY_LEFT:
+        mvwprintw(win, 1, 2, "Input: LEFT");
+        break;
+    case KEY_RIGHT:
+        mvwprintw(win, 1, 2, "Input: RIGHT");
+        break;
+    case KEY_UP:
+        mvwprintw(win, 1, 2, "Input: UP");
+        break;
+    case KEY_DOWN:
+        mvwprintw(win, 1, 2, "Input: DOWN");
+        break;
+
+    default:
+        mvwprintw(win, 1, 2, "Input: %c", (char)c);
+        break;
+    }
+    
     wrefresh(win);
 }
 
 void draw_map(WINDOW_S *win, struct SERVER_OUTPUT *data)
 {
     // int y,x;
-    for (int i = 1; i < win->height - 1; i++)
+    wclear(win->winptr);
+    box(win->winptr, 0, 0);
+
+    for (int i = 1; i <= data->viewport_h; i++)
     {
-        // mvwprintw(win->winptr, i, 1, "%.*s", win->width - 2, arena_map[i - 1]);
-        for (int j = 1; j < win->width - 1; j++)
+
+        int j = 1;
+        wmove(win->winptr, data->viewport_start.y + i, data->viewport_start.x + j);
+        for (; j <= data->viewport_w; j++)
         {
             if (data->arena[i - 1][j - 1] == BLOCK_FULL)
-                mvwaddch(win->winptr, i, j, ACS_CKBOARD);
+                waddch(win->winptr, ACS_CKBOARD);
             else
-                mvwaddch(win->winptr, i, j, data->arena[i - 1][j - 1]);
+                waddch(win->winptr, data->arena[i - 1][j - 1]);
         }
     }
     wrefresh(win->winptr);

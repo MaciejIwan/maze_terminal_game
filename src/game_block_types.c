@@ -100,6 +100,12 @@ int block_match_move_type(char blocktype){
         return 2; // normal move
 }
 
+bool block_is_player(char new_block_type){
+    if(new_block_type >= '1' && new_block_type <= '2')
+        return TRUE;
+    else
+        return FALSE;
+}
 char block_change_type(CHUNK *chunk, char new_block_type, int treasure_value)
 {
     if (chunk == NULL)
@@ -115,5 +121,17 @@ char block_change_type(CHUNK *chunk, char new_block_type, int treasure_value)
     chunk->block.symbol = block_match_symbol(new_block_type);
     chunk->block.action = block_match_action(new_block_type);
     chunk->block.move_permission = block_match_move_type(new_block_type);
+
+    if(block_is_player(new_block_type) == FALSE){
+
+        chunk->visitors_count = 0;
+        for (int i = 0; i < chunk->visitors_max; i++)
+            chunk->visitors[i] = NULL;
+    }
+
+    if(new_block_type == BLOCK_BLANK){
+        chunk->is_free = TRUE;
+    }
+
     return old_block_type;
 }

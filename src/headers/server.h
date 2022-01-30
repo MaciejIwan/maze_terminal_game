@@ -37,6 +37,11 @@ typedef struct {
     PLAYER* local_player;
     BEAST* beast;
 
+    int counter_c;
+    int counter_t;
+    int counter_T;
+    int counter_D;
+
     int max_players_on_server;
 } WORLD_T;
 
