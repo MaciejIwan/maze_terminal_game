@@ -13,7 +13,7 @@
 #define BLOCK_BLANK ' '
 
 #ifndef _CHUNK_BLOCK_TYPES_
-typedef int (*block_action_ptr)(void *);
+typedef int (*block_action_ptr)(void *, void*);
 
 typedef struct
 {
@@ -37,9 +37,11 @@ typedef struct
 #define _CHUNK_BLOCK_TYPES_
 #endif
 
-int block_action_treasure(void *data);
-int block_action_bank(void *data);
-int block_action_bushes(void *data);
+int block_action_treasure(void *data, void* player);
+int block_action_bank(void *data,void* player);
+int block_action_bushes(void *data,void* player);
+int block_action_player(void *data, void *player);
+int block_action_beast(void *data, void *player);
 
 char block_change_type(CHUNK *chunk, char new_block_type, int treasure_value);
 bool block_is_player(char new_block_type);

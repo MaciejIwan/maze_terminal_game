@@ -6,7 +6,7 @@
 #include "common.h"
 
 #ifndef _CHUNK_BLOCK_TYPES_
-typedef int (*block_action_ptr)(void *);
+typedef int (*block_action_ptr)(void *, void*);
 
 typedef struct
 {

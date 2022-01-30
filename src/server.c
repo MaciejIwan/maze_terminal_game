@@ -217,7 +217,8 @@ DIRECTION key_to_direction(int k)
 void server_place_player_on_map(CHUNK *chunk, PLAYER *player)
 {
     chunk->visitors_count = 1;
-    chunk->visitors[player->id != '*' ? player->id - '0' : 2] = player;
+    int index = (player->id != '*') ? player->id - '0' : 2;
+    chunk->visitors[index] = player;
     chunk->is_free = false;
     block_change_type(chunk, player->id, 0);
 }
@@ -392,13 +393,25 @@ bool server_player_move(WORLD_T *world, PLAYER *player, DIRECTION dir)
 {
     if (!world || !player || dir == STAY)
         return FALSE;
+
+    if (player->blocked == TRUE){
+        player->blocked = FALSE;
+        return FALSE;
+    }
+    
     CHUNK *curr_chunk = &world->MAP[player->positon.y][player->positon.x];
     CHUNK *dest_chunk = player_move_desitnation_chunk(world, player->positon, dir);
+    
     if (dest_chunk == NULL)
         return FALSE;
 
     if (player_move_possible(dest_chunk) == FALSE)
         return FALSE;
+    
+    
+    
+    CHUNK temp_chunk; // old properties, need for action fun
+    memcpy(&temp_chunk,dest_chunk, sizeof(CHUNK));
 
     block_action_ptr action = dest_chunk->block.action;
 
@@ -408,7 +421,11 @@ bool server_player_move(WORLD_T *world, PLAYER *player, DIRECTION dir)
     server_place_player_on_map(dest_chunk, player);
 
     if (action != NULL) // block has some action to do
-        (*action)(dest_chunk);
+    {
+        (*action)(&temp_chunk, player);
+    }
+
+   
 
     return TRUE;
 }
