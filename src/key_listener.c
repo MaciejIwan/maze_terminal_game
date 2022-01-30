@@ -37,12 +37,16 @@ static void *key_listener(void *args)
     {
         temp_key = getch();
         ket_listener_set(temp_key);
-        if(temp_key == 'q')
-            pthread_exit(NULL);
     }
+    return NULL;
 }
 
 void key_listener_init()
 {
     pthread_create(&klistener_th, NULL, key_listener, NULL);
+}
+
+void key_listener_close()
+{
+    pthread_cancel(klistener_th);
 }

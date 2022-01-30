@@ -6,6 +6,7 @@
 
 void key_listener_init();
 
+void key_listener_close();
 int key_listener_get();
 
 #endif // _KEYLISTENER_H_

@@ -3,6 +3,7 @@
 sem_t *sem_s_write;
 int fd_s_write;
 struct SERVER_OUTPUT *pdata_s_write;
+extern SCREEN_S G_SCR;
 
 bool server_player_move(WORLD_T *world, PLAYER *player, DIRECTION dir);
 bool server_player_create(WORLD_T *world, PLAYER *player, char id);
@@ -15,8 +16,6 @@ DIRECTION key_to_direction(int k);
 void deal_with_input(int *key, int *terminate, int *round_number);
 void send_data(WORLD_T *world, void *src, const int *round_number);
 
-
-
 void server()
 {
     struct SERVER_OUTPUT swap_online_player_copy;
@@ -28,33 +27,58 @@ void server()
 
     connection_fetch(&pdata_s_write->cs, &swap_online_player_copy, pdata_s_write, sizeof(struct SERVER_OUTPUT));
 
+    disp_init();
+    draw_game_screen_layout();
+    key_listener_init();
+
     WORLD_T *world = server_world_generate();
     if (world == NULL)
         exit(2); // have to free all here }
 
-    server_player_create(world, &online_player, '1');
+    server_player_create(world, &local_player, '1');
+    server_player_create(world, &online_player, '2');
     server_swap_file_generator(world, &online_player, &swap_online_player_copy);
-    printf("Gotowe, czekam na klienta; pdata=%p...\n", (void *)pdata_c_write);
 
-    int terminate = 0, round_number = 0,
-        player_input = 0;
+    printw("Gotowe, czekam na klienta; pdata=%p...\n", (void *)pdata_c_write);
+    refresh();
 
+    int terminate = 0, round_number = 0;
+    int player_input = 0, local_input = 0;
     send_data(world, &swap_online_player_copy, &round_number);
+
+    // ==============================
+    // SERVER LOOP
+    // ==============================
+
     while (!terminate)
     {
 
         sem_wait(sem_c_write); // wait for player / user data
 
         deal_with_input(&player_input, &terminate, &round_number);
+        local_input = key_listener_get();
+        server_player_move(world, &local_player, key_to_direction(local_input));
+
         server_player_move(world, &online_player, key_to_direction(player_input));
         server_swap_file_generator(world, &online_player, &swap_online_player_copy);
         send_data(world, &swap_online_player_copy, &round_number);
 
         usleep(250 * MS);
+        draw_input(64);
+        draw_server_map(G_SCR.W[W_ARENA], world);
         sem_post(sem_s_write); // send singal to player "NEW DATA ARE WAITING"
     }
 
+    // ==============================
+    // SERVER LOOP
+    // ==============================
+
+    void key_listener_close();
     server_world_destory(&world);
+    screen_layout_close(&G_SCR);
+    disp_close();
+    exit_curses(3);
+    fflush(stdout); // safe for output streams (remove mesh after ncurses) // https://man7.org/linux/man-pages/man3/fflush.3p.html
 }
 
 void deal_with_input(int *key, int *terminate, int *round_number)
@@ -64,8 +88,35 @@ void deal_with_input(int *key, int *terminate, int *round_number)
     *key = pdata_c_write->input;
     *round_number = *round_number + 1;
     *terminate = *key == 'q';
+
     if (*key)
-        printf("[%03d:%03d]: %c\n", *round_number, pdata_c_write->client_pid, (char)*key);
+    {
+        WINDOW *win = G_SCR.W[W_INFO]->winptr;
+        wclear(win);
+        box(win, 0, 0);
+        mvwprintw(win, 1, 2, "Use Arrows to move");
+
+        switch (*key)
+        {
+        case KEY_LEFT:
+            mvwprintw(win, 2, 2, "LAST ONLINE USER INPUT: LEFT");
+            break;
+        case KEY_RIGHT:
+            mvwprintw(win, 2, 2, "LAST ONLINE USER INPUT: RIGHT");
+            break;
+        case KEY_UP:
+            mvwprintw(win, 2, 2, "LAST ONLINE USER INPUT: UP");
+            break;
+        case KEY_DOWN:
+            mvwprintw(win, 2, 2, "LAST ONLINE USER INPUT: DOWN");
+            break;
+
+        default:
+            mvwprintw(win, 2, 2, "LAST ONLINE USER INPUT: [%03d:%03d]: %c", *round_number, pdata_c_write->client_pid, (char)*key);
+            break;
+        }
+        wrefresh(win);
+    }
 
     sem_post(&pdata_c_write->cs);
 }
@@ -82,7 +133,7 @@ void send_data(WORLD_T *world, void *src, const int *round_number)
 WORLD_T *server_world_generate()
 {
     extern char arena_map[ARENA_HEIGHT][ARENA_WIDTH];
-    WORLD_T *world = calloc(1, sizeof(world));
+    WORLD_T *world = calloc(1, sizeof(WORLD_T));
     if (!world)
     {
         errno = ENOMEM;
@@ -110,9 +161,6 @@ WORLD_T *server_world_generate()
 
 void server_world_destory(WORLD_T **world)
 {
-    free((*world)->local_player);
-    free((*world)->online_player);
-    free((*world)->beast);
 
     free(*world);
     *world = NULL;
@@ -137,7 +185,7 @@ bool server_player_create(WORLD_T *world, PLAYER *player, char id)
 
     player->id = id;
     player->type = PLAYER_HUMAN;
-    //player->positon = server_player_locate(world, id); // if not world spawn player in random place
+    // player->positon = server_player_locate(world, id); // if not world spawn player in random place
     server_find_random_free_chunk(world, &player->positon);
     server_add_player_to_world(world, player);
     return true;
@@ -240,7 +288,7 @@ void generate_player_view(WORLD_T *world, struct SERVER_OUTPUT *dst)
     memcpy(&data, dst, sizeof(struct SERVER_OUTPUT));
 
     CORDS player_pos = data.player.positon;
-    player_pos = server_player_locate(world, '1'); // for debug and player 1 set in arena_map declaration
+    player_pos = server_player_locate(world, '2'); // for debug and player 1 set in arena_map declaration
 
     int x = player_pos.x >= 2 ? player_pos.x - 2 : 0,
         y = player_pos.y >= 2 ? player_pos.y - 2 : 0;
@@ -248,7 +296,7 @@ void generate_player_view(WORLD_T *world, struct SERVER_OUTPUT *dst)
     int width = player_pos.x >= 2 ? 5 : 3,
         height = player_pos.y >= 2 ? 5 : (player_pos.y == 1 ? 4 : 3);
 
-    while (x + width > ARENA_WIDTH-1)
+    while (x + width > ARENA_WIDTH - 1)
         width--;
 
     while (y + height > ARENA_HEIGHT)

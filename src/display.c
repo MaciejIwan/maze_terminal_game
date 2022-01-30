@@ -63,7 +63,7 @@ void draw_game_screen_layout()
         wrefresh(G_SCR.W[i]->winptr);
 
     // fill window with texts / map
-    draw_display(G_SCR.W[W_DISPLAY], NULL);
+    draw_display(G_SCR.W[W_DISPLAY], NULL, 0);
     draw_info();
 }
 
@@ -104,20 +104,22 @@ void destroy_window_s(WINDOW_S *data)
     free(data);
 }
 
-void draw_display(WINDOW_S *win, const struct SERVER_OUTPUT *local_data)
+void draw_display(WINDOW_S *win, const struct SERVER_OUTPUT *local_data, int Offset)
 {
+    if (!win || !local_data)
+        return;
 
-    mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 1, 2, " SPID:  %14d", local_data ? local_data->owner_pid : 0);
-    mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 2, 2, " CPID:  %14d", getpid());
-    mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 3, 2, "pdata:  %p", (void *)pdata_c_write);
-
-    if (!sem_trywait(&pdata_s_write->cs))
-    {
-        mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 4, 2, "round:	 %7ld", (long)pdata_s_write->round);
-        sem_post(&pdata_s_write->cs);
-        waddch(G_SCR.W[W_DISPLAY]->winptr, ACS_CKBOARD);
+    if(Offset == 0){
+    mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 1, 2, "SPID:  %14d", local_data->owner_pid);
+    mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 2, 2, "round:	 %7ld", (long)local_data->round);
     }
-    mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 5, 2, "Cords:   y:%3d,  x:%3d", local_data ? local_data->player.positon.y : 0, local_data ? local_data->player.positon.x : 0);
+
+    int x = 2 + Offset;
+    mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 7, x, "PLAYER: %c", local_data->player.id);
+
+    mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 9, x,  "Bank  :%4d Y :%2d  ", local_data->player.econonmy.bank, local_data->player.positon.y);
+    mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 10, x, "Cash  :%4d X :%2d", local_data->player.econonmy.eq, local_data->player.positon.x);
+    mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 11, x, "Daeths:%4d", local_data->player.deaths);
 
     wrefresh(G_SCR.W[W_DISPLAY]->winptr);
 }
@@ -156,7 +158,7 @@ void draw_input(int c)
         mvwprintw(win, 1, 2, "Input: %c", (char)c);
         break;
     }
-    
+
     wrefresh(win);
 }
 
@@ -189,7 +191,7 @@ void draw_server_map(WINDOW_S *win, WORLD_T *data)
     box(win->winptr, 0, 0);
 
     int viewport_h = ARENA_HEIGHT;
-    int viewport_w = ARENA_WIDTH;
+    int viewport_w = ARENA_WIDTH - 1;
     int start_y = 0, start_x = 0;
 
     for (int i = 1; i <= viewport_h; i++)

@@ -36,13 +36,14 @@ void client()
         sem_post(sem_c_write); // let server know data are ready
 
         draw_map(G_SCR.W[W_ARENA], &local_data);
-        draw_display(G_SCR.W[W_DISPLAY], &local_data);
+        draw_display(G_SCR.W[W_DISPLAY], &local_data, 0);
         draw_input(c);
 
         if (c == 'q')
             terminate = 1;
     }
 
+    key_listener_close();
     screen_layout_close(&G_SCR);
     disp_close();
     //_nc_freeall(); // free all memory allocated by ncurses
