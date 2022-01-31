@@ -5,6 +5,8 @@ int fd_s_write;
 struct SERVER_OUTPUT *pdata_s_write;
 extern SCREEN_S G_SCR;
 
+WORLD_T *world;
+
 bool server_player_move(WORLD_T *world, PLAYER *player, DIRECTION dir);
 bool server_player_create(WORLD_T *world, PLAYER *player, char id, PLAYER_TYPE type);
 bool server_add_player_to_world(WORLD_T *world, PLAYER *player);
@@ -32,7 +34,7 @@ void server()
     draw_game_screen_layout();
     key_listener_init();
 
-    WORLD_T *world = server_world_generate();
+    world = server_world_generate();
     if (world == NULL)
         exit(2); // have to free all here }
 
@@ -152,7 +154,6 @@ WORLD_T *server_world_generate()
             block_change_type(chunk, arena_map[i][j], 0);
             chunk->location.x = j;
             chunk->location.y = i;
-            chunk->visitors_max = MAX_SERVER_PLAYERS;
             if (chunk->block.ID == BLOCK_BLANK)
                 chunk->is_free = TRUE;
         }
@@ -187,7 +188,8 @@ bool server_player_create(WORLD_T *world, PLAYER *player, char id, enum player_t
 
     player->id = id;
     player->type = type;
-    if(player->type == PLAYER_BEAST){
+    if (player->type == PLAYER_BEAST)
+    {
         player->kills = 0;
         player->last_move = STAY;
     }
@@ -217,8 +219,7 @@ DIRECTION key_to_direction(int k)
 void server_place_player_on_map(CHUNK *chunk, PLAYER *player)
 {
     chunk->visitors_count = 1;
-    int index = (player->id != '*') ? player->id - '0' : 2;
-    chunk->visitors[index] = player;
+    chunk->visitor = player;
     chunk->is_free = false;
     block_change_type(chunk, player->id, 0);
 }
@@ -242,7 +243,8 @@ bool server_add_player_to_world(WORLD_T *world, PLAYER *player)
         server_place_player_on_map(cur_chunk, player);
         return TRUE;
     }
-    else if (world->beast == NULL){
+    else if (world->beast == NULL)
+    {
         world->beast = player;
         CHUNK *cur_chunk = &world->MAP[player->positon.y][player->positon.x];
         server_place_player_on_map(cur_chunk, player);
@@ -342,6 +344,18 @@ bool player_move_possible(CHUNK *target_chunk)
         return TRUE;
 }
 
+void server_respawn_player(CHUNK* player_chunk){
+    if(player_chunk == NULL) return;
+    CORDS new_cords;
+    CHUNK new_chunk;
+
+    server_find_random_free_chunk(world, &new_cords);
+    player_chunk->location.x = new_cords.x;
+    player_chunk->location.y = new_cords.y;
+
+    server_place_player_on_map(&new_chunk, player_chunk->visitor);
+    block_change_type(player_chunk, BLOCK_BLANK, 0);
+}
 CHUNK *player_move_desitnation_chunk(WORLD_T *world, CORDS pos, DIRECTION dir)
 {
     CHUNK *desitnation = NULL;
@@ -394,48 +408,54 @@ bool server_player_move(WORLD_T *world, PLAYER *player, DIRECTION dir)
     if (!world || !player || dir == STAY)
         return FALSE;
 
-    if (player->blocked == TRUE){
+    if (player->blocked == TRUE)
+    {
         player->blocked = FALSE;
         return FALSE;
     }
-    
+
     CHUNK *curr_chunk = &world->MAP[player->positon.y][player->positon.x];
     CHUNK *dest_chunk = player_move_desitnation_chunk(world, player->positon, dir);
-    
+
     if (dest_chunk == NULL)
         return FALSE;
 
     if (player_move_possible(dest_chunk) == FALSE)
         return FALSE;
-    
-    
-    
-    CHUNK temp_chunk; // old properties, need for action fun
-    memcpy(&temp_chunk,dest_chunk, sizeof(CHUNK));
 
-    block_action_ptr action = dest_chunk->block.action;
+    CHUNK temp_chunk; // old properties, need for action fun
+    memcpy(&temp_chunk, dest_chunk, sizeof(CHUNK));
 
     extern char arena_map[ARENA_HEIGHT][ARENA_WIDTH];
-    block_change_type(curr_chunk, arena_map[player->positon.y][player->positon.x], 0);
-    server_player_move_change_p_pos(player, dir);
-    server_place_player_on_map(dest_chunk, player);
-
-    if (action != NULL) // block has some action to do
+    block_action_ptr action = dest_chunk->block.action;
+    if (action == block_action_player)
     {
-        (*action)(&temp_chunk, player);
+        (*action)(curr_chunk, dest_chunk);
+        server_respawn_player(curr_chunk);
+        server_respawn_player(dest_chunk);
     }
 
-   
+    else
+    {
+        block_change_type(curr_chunk, arena_map[player->positon.y][player->positon.x], 0);
+        server_player_move_change_p_pos(player, dir);
+        server_place_player_on_map(dest_chunk, player);
+
+        if (action != NULL) // block has some action to do
+        {
+            (*action)(&temp_chunk, player);
+        }
+    }
 
     return TRUE;
 }
 
+BEAST *beast_spawn()
+{
 
-
-BEAST* beast_spawn(){
-
-    BEAST* beast = calloc(1, sizeof(BEAST));
-    if(beast == NULL){
+    BEAST *beast = calloc(1, sizeof(BEAST));
+    if (beast == NULL)
+    {
         errno = ENOMEM;
         return NULL;
     }
@@ -450,11 +470,13 @@ BEAST* beast_spawn(){
     return beast;
 }
 
-void beast_kill(BEAST * beast){
+void beast_kill(BEAST *beast)
+{
     free(beast);
 }
 
-DIRECTION beast_pursuit(WORLD_T* world){
+DIRECTION beast_pursuit(WORLD_T *world)
+{
     // check if player is reachable, if yes try to catch him
     // if not go to random direction, but continue last direction until block (end of tunel or someting)
     return (rand() % STAY);

@@ -23,8 +23,8 @@ typedef struct
     CORDS location;
     bool is_free;
     int visitors_count;      // how many players beast on chunk;
-    int visitors_max;        // how many players beast on chunk;
-    CHARACTERS *visitors[3]; // to do on heap when more players
+    //int visitors_max;        // how many players beast on chunk;
+    CHARACTERS *visitor; // to do on heap when more players
 } CHUNK;
 
 #define _CHUNK_BLOCK_TYPES_

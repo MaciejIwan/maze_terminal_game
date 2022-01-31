@@ -33,6 +33,7 @@ typedef struct
     CORDS positon;
     PLAYER_TYPE type;
     bool blocked; // could be blocked in bush block
+    //DIRECTION input;
     union
     {
         struct

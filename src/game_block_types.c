@@ -67,11 +67,18 @@ int block_action_player(void *data, void *player)
     if (data == NULL || player == NULL)
         return 1;
     CHUNK *chunk = (CHUNK *)data;
-    CHARACTERS *ch = (CHARACTERS *)player;
-    CHARACTERS *ch2 = chunk->visitors[0]; // visitor
+    CHUNK *chunk2 = (CHUNK *)player;
+
+    CHARACTERS *ch = chunk2->visitor;
+    CHARACTERS *ch2 = chunk->visitor; // visitor
+
+    ch->deaths += 1;
+    ch2->deaths += 1;
 
     int D = ch->econonmy.eq + ch2->econonmy.eq;
     block_change_type(chunk, BLOCK_DROPED_TREASURE, D);
+    block_change_type(chunk2, BLOCK_BLANK, 0);
+
     return 0;
 }
 
@@ -136,6 +143,8 @@ char block_change_type(CHUNK *chunk, char new_block_type, int treasure_value)
     char old_block_type = chunk->block.ID;
     if (treasure_value == 0)
     {
+        if(new_block_type == BLOCK_DROPED_TREASURE)
+            new_block_type = BLOCK_BLANK;
         treasure_value = block_match_treasure_value(new_block_type);
     }
 
@@ -149,8 +158,7 @@ char block_change_type(CHUNK *chunk, char new_block_type, int treasure_value)
     {
 
         chunk->visitors_count = 0;
-        for (int i = 0; i < chunk->visitors_max; i++)
-            chunk->visitors[i] = NULL;
+        chunk->visitor = NULL;
     }
 
     if (new_block_type == BLOCK_BLANK)
