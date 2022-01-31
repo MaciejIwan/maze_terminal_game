@@ -17,6 +17,7 @@ void server_swap_file_generator(WORLD_T *world, PLAYER *player, struct SERVER_OU
 DIRECTION key_to_direction(int k);
 void deal_with_input(int *key, int *terminate, int *round_number);
 void send_data(WORLD_T *world, void *src, const int *round_number);
+void deal_with_cmd(int cmd);
 
 void server()
 {
@@ -43,7 +44,7 @@ void server()
     server_player_create(world, &beast, '*', PLAYER_BEAST);
     server_swap_file_generator(world, &online_player, &swap_online_player_copy);
 
-    printw("Gotowe, czekam na klienta; pdata=%p...\n", (void *)pdata_c_write);
+    mvprintw(4,4,"Gotowe, czekam na klienta");
     refresh();
 
     int terminate = 0, round_number = 0;
@@ -56,21 +57,36 @@ void server()
 
     while (!terminate)
     {
+        // wait for player / user data
+        sem_wait(sem_c_write);
 
-        sem_wait(sem_c_write); // wait for player / user data
-
+        // get input from other thread in safe way
         deal_with_input(&player_input, &terminate, &round_number);
         local_input = key_listener_get();
-        server_player_move(world, &local_player, key_to_direction(local_input));
+        if(local_input == 'q'|| player_input == 'q'){
+            terminate = 1;
+            break;
+        }
+        // convert input to direction
+        local_player.input = key_to_direction(local_input);
+        online_player.input = key_to_direction(player_input);
 
-        server_player_move(world, &online_player, key_to_direction(player_input));
+        // deal with inputs
+        deal_with_cmd(local_input);
+        server_player_move(world, &local_player, local_player.input);
+        server_player_move(world, &online_player, online_player.input);
+
+        // generate player data in safe way, and send it
         server_swap_file_generator(world, &online_player, &swap_online_player_copy);
         send_data(world, &swap_online_player_copy, &round_number);
 
+        // serwer tick and view
         usleep(250 * MS);
         draw_input(64);
         draw_server_map(G_SCR.W[W_ARENA], world);
-        sem_post(sem_s_write); // send singal to player "NEW DATA ARE WAITING"
+
+        // send singal to player "NEW DATA ARE WAITING"
+        sem_post(sem_s_write);
     }
 
     // ==============================
@@ -78,11 +94,12 @@ void server()
     // ==============================
 
     void key_listener_close();
+    connection_close();
     server_world_destory(&world);
     screen_layout_close(&G_SCR);
     disp_close();
-    exit_curses(3);
     fflush(stdout); // safe for output streams (remove mesh after ncurses) // https://man7.org/linux/man-pages/man3/fflush.3p.html
+    exit_curses(3);
 }
 
 void deal_with_input(int *key, int *terminate, int *round_number)
@@ -125,6 +142,32 @@ void deal_with_input(int *key, int *terminate, int *round_number)
     sem_post(&pdata_c_write->cs);
 }
 
+void deal_with_cmd(int cmd){
+    CORDS cords = {0,0};
+    CHUNK* chunk;
+
+    server_find_random_free_chunk(world, &cords);
+    chunk = &world->MAP[cords.y][cords.x];
+
+    switch (cmd)
+    {
+    case BLOCK_ONE_COIN:
+        block_change_type(chunk, BLOCK_ONE_COIN, 0);
+        break;
+    case BLOCK_LARGE_TREASURE:
+        block_change_type(chunk, BLOCK_LARGE_TREASURE, 0);
+        break;
+    case BLOCK_TREASURE:
+        block_change_type(chunk, BLOCK_TREASURE, 0);
+        break;
+    case BLOCK_BUSHES:
+        block_change_type(chunk, BLOCK_BUSHES, 0);
+        break;
+
+    default:
+        break;
+    }
+}
 void send_data(WORLD_T *world, void *src, const int *round_number)
 {
     struct SERVER_OUTPUT *data = (struct SERVER_OUTPUT *)src;
@@ -347,13 +390,14 @@ bool player_move_possible(CHUNK *target_chunk)
 void server_respawn_player(CHUNK* player_chunk){
     if(player_chunk == NULL) return;
     CORDS new_cords;
-    CHUNK new_chunk;
+    CHUNK *new_chunk;
 
     server_find_random_free_chunk(world, &new_cords);
-    player_chunk->location.x = new_cords.x;
-    player_chunk->location.y = new_cords.y;
+    new_chunk = &world->MAP[new_cords.y][new_cords.x];
+    player_chunk->visitor->positon.x = new_cords.x;
+    player_chunk->visitor->positon.y = new_cords.y;
 
-    server_place_player_on_map(&new_chunk, player_chunk->visitor);
+    server_place_player_on_map(new_chunk, player_chunk->visitor);
     block_change_type(player_chunk, BLOCK_BLANK, 0);
 }
 CHUNK *player_move_desitnation_chunk(WORLD_T *world, CORDS pos, DIRECTION dir)
@@ -422,7 +466,7 @@ bool server_player_move(WORLD_T *world, PLAYER *player, DIRECTION dir)
 
     if (player_move_possible(dest_chunk) == FALSE)
         return FALSE;
-
+    
     CHUNK temp_chunk; // old properties, need for action fun
     memcpy(&temp_chunk, dest_chunk, sizeof(CHUNK));
 
@@ -430,14 +474,22 @@ bool server_player_move(WORLD_T *world, PLAYER *player, DIRECTION dir)
     block_action_ptr action = dest_chunk->block.action;
     if (action == block_action_player)
     {
-        (*action)(curr_chunk, dest_chunk);
+        int D = (*action)(curr_chunk, dest_chunk);
+
         server_respawn_player(curr_chunk);
         server_respawn_player(dest_chunk);
+        block_change_type(curr_chunk, BLOCK_DROPED_TREASURE, D);
+        block_change_type(dest_chunk, BLOCK_BLANK, 0);
     }
 
     else
     {
-        block_change_type(curr_chunk, arena_map[player->positon.y][player->positon.x], 0);
+        char block = arena_map[player->positon.y][player->positon.x];
+        if(block == BLOCK_BUSHES)
+            block = BLOCK_BUSHES;
+        else 
+            block = BLOCK_BLANK;
+        block_change_type(curr_chunk, block, 0);
         server_player_move_change_p_pos(player, dir);
         server_place_player_on_map(dest_chunk, player);
 
