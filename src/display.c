@@ -130,6 +130,11 @@ void draw_info()
     box(win, 0, 0);
 
     mvwprintw(win, 1, 2, "Use Arrows to move");
+    mvwprintw(win, 4, 2, "#     bushes (slow down");
+    mvwprintw(win, 5, 2, "12    players");
+    mvwprintw(win, 6, 2, "*     enemy beast");
+    mvwprintw(win, 7, 2, "c/C/T tresure (1, 10. 50 coins");
+    mvwprintw(win, 8, 2, "A     Bank");
     wrefresh(win);
 }
 

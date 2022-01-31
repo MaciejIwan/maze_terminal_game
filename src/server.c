@@ -6,7 +6,6 @@ struct SERVER_OUTPUT *pdata_s_write;
 extern SCREEN_S G_SCR;
 
 WORLD_T *world;
-
 bool server_player_move(WORLD_T *world, PLAYER *player, DIRECTION dir);
 bool server_player_create(WORLD_T *world, PLAYER *player, char id, PLAYER_TYPE type);
 bool server_add_player_to_world(WORLD_T *world, PLAYER *player);
@@ -15,9 +14,11 @@ void generate_player_view(WORLD_T *world, struct SERVER_OUTPUT *dst);
 int server_find_random_free_chunk(WORLD_T *world, CORDS *ptr);
 void server_swap_file_generator(WORLD_T *world, PLAYER *player, struct SERVER_OUTPUT *output);
 DIRECTION key_to_direction(int k);
-void deal_with_input(int *key, int *terminate, int *round_number);
+void deal_with_input(int *key, int *terminate, int *round_number, int *cpid);
 void send_data(WORLD_T *world, void *src, const int *round_number);
 void deal_with_cmd(int cmd);
+DIRECTION beast_pursuit(WORLD_T *world);
+void *beast_move(void *data);
 
 void server()
 {
@@ -28,6 +29,8 @@ void server()
     PLAYER local_player;
     PLAYER online_player;
     BEAST beast;
+    pthread_t beast_th;
+    //DIRECTION beast_direction;
 
     connection_fetch(&pdata_s_write->cs, &swap_online_player_copy, pdata_s_write, sizeof(struct SERVER_OUTPUT));
 
@@ -44,10 +47,10 @@ void server()
     server_player_create(world, &beast, '*', PLAYER_BEAST);
     server_swap_file_generator(world, &online_player, &swap_online_player_copy);
 
-    mvprintw(4,4,"Gotowe, czekam na klienta");
+    mvprintw(4, 4, "Gotowe, czekam na klienta");
     refresh();
 
-    int terminate = 0, round_number = 0;
+    int terminate = 0, round_number = 0, cpid = 0;
     int player_input = 0, local_input = 0;
     send_data(world, &swap_online_player_copy, &round_number);
 
@@ -61,9 +64,10 @@ void server()
         sem_wait(sem_c_write);
 
         // get input from other thread in safe way
-        deal_with_input(&player_input, &terminate, &round_number);
+        deal_with_input(&player_input, &terminate, &round_number, &cpid);
         local_input = key_listener_get();
-        if(local_input == 'q'|| player_input == 'q'){
+        if (local_input == 'q' || player_input == 'q')
+        {
             terminate = 1;
             break;
         }
@@ -75,6 +79,8 @@ void server()
         deal_with_cmd(local_input);
         server_player_move(world, &local_player, local_player.input);
         server_player_move(world, &online_player, online_player.input);
+        pthread_create(&beast_th, NULL, beast_move, &beast.input);
+        pthread_join(beast_th, NULL);
 
         // generate player data in safe way, and send it
         server_swap_file_generator(world, &online_player, &swap_online_player_copy);
@@ -82,8 +88,12 @@ void server()
 
         // serwer tick and view
         usleep(250 * MS);
-        draw_input(64);
+        draw_display(G_SCR.W[W_DISPLAY], &swap_online_player_copy,0);
+        memcpy(&swap_local_player.player, &local_player, sizeof(PLAYER));
+        mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 1, 28, "CPID:  %14d", cpid);
+        draw_display(G_SCR.W[W_DISPLAY], &swap_local_player,28);
         draw_server_map(G_SCR.W[W_ARENA], world);
+        draw_input(local_player.input);
 
         // send singal to player "NEW DATA ARE WAITING"
         sem_post(sem_s_write);
@@ -93,6 +103,7 @@ void server()
     // SERVER LOOP
     // ==============================
 
+    kill(cpid, SIGKILL);
     void key_listener_close();
     connection_close();
     server_world_destory(&world);
@@ -102,11 +113,12 @@ void server()
     exit_curses(3);
 }
 
-void deal_with_input(int *key, int *terminate, int *round_number)
+void deal_with_input(int *key, int *terminate, int *round_number, int *cpid)
 {
     sem_wait(&pdata_c_write->cs);
 
     *key = pdata_c_write->input;
+    *cpid = pdata_c_write->client_pid;
     *round_number = *round_number + 1;
     *terminate = *key == 'q';
 
@@ -115,6 +127,7 @@ void deal_with_input(int *key, int *terminate, int *round_number)
         WINDOW *win = G_SCR.W[W_INFO]->winptr;
         wclear(win);
         box(win, 0, 0);
+        draw_info();
         mvwprintw(win, 1, 2, "Use Arrows to move");
 
         switch (*key)
@@ -142,9 +155,10 @@ void deal_with_input(int *key, int *terminate, int *round_number)
     sem_post(&pdata_c_write->cs);
 }
 
-void deal_with_cmd(int cmd){
-    CORDS cords = {0,0};
-    CHUNK* chunk;
+void deal_with_cmd(int cmd)
+{
+    CORDS cords = {0, 0};
+    CHUNK *chunk;
 
     server_find_random_free_chunk(world, &cords);
     chunk = &world->MAP[cords.y][cords.x];
@@ -387,8 +401,10 @@ bool player_move_possible(CHUNK *target_chunk)
         return TRUE;
 }
 
-void server_respawn_player(CHUNK* player_chunk){
-    if(player_chunk == NULL) return;
+void server_respawn_player(CHUNK *player_chunk)
+{
+    if (player_chunk == NULL)
+        return;
     CORDS new_cords;
     CHUNK *new_chunk;
 
@@ -466,7 +482,60 @@ bool server_player_move(WORLD_T *world, PLAYER *player, DIRECTION dir)
 
     if (player_move_possible(dest_chunk) == FALSE)
         return FALSE;
-    
+
+    CHUNK temp_chunk; // old properties, need for action fun
+    memcpy(&temp_chunk, dest_chunk, sizeof(CHUNK));
+
+    extern char arena_map[ARENA_HEIGHT][ARENA_WIDTH];
+    block_action_ptr action = dest_chunk->block.action;
+    if (action == block_action_player || action == block_action_beast)
+    {
+        int D = (*action)(curr_chunk, dest_chunk);
+
+        server_respawn_player(curr_chunk);
+        server_respawn_player(dest_chunk);
+        block_change_type(curr_chunk, BLOCK_DROPED_TREASURE, D);
+        block_change_type(dest_chunk, BLOCK_BLANK, 0);
+    }
+    // else if (action == block_action_beast){
+    //     int D = (*action)(curr_chunk, dest_chunk);
+    // }
+    else
+    {
+        char block = arena_map[player->positon.y][player->positon.x];
+        if (block == BLOCK_BUSHES)
+            block = BLOCK_BUSHES;
+        else
+            block = BLOCK_BLANK;
+        block_change_type(curr_chunk, block, 0);
+        server_player_move_change_p_pos(player, dir);
+        server_place_player_on_map(dest_chunk, player);
+
+        if (action != NULL) // block has some action to do
+        {
+            (*action)(&temp_chunk, player);
+        }
+    }
+
+    return TRUE;
+}
+
+void *beast_move(void *data)
+{
+    //return NULL;
+    PLAYER* player = world->beast;
+    DIRECTION dir = beast_pursuit(world);
+    memcpy(data, &dir, sizeof(DIRECTION));
+
+    CHUNK *curr_chunk = &world->MAP[player->positon.y][player->positon.x];
+    CHUNK *dest_chunk = player_move_desitnation_chunk(world, player->positon, dir);
+
+    if (dest_chunk == NULL)
+        return FALSE;
+
+    if (player_move_possible(dest_chunk) == FALSE)
+        return FALSE;
+
     CHUNK temp_chunk; // old properties, need for action fun
     memcpy(&temp_chunk, dest_chunk, sizeof(CHUNK));
 
@@ -485,10 +554,7 @@ bool server_player_move(WORLD_T *world, PLAYER *player, DIRECTION dir)
     else
     {
         char block = arena_map[player->positon.y][player->positon.x];
-        if(block == BLOCK_BUSHES)
-            block = BLOCK_BUSHES;
-        else 
-            block = BLOCK_BLANK;
+
         block_change_type(curr_chunk, block, 0);
         server_player_move_change_p_pos(player, dir);
         server_place_player_on_map(dest_chunk, player);
@@ -499,37 +565,54 @@ bool server_player_move(WORLD_T *world, PLAYER *player, DIRECTION dir)
         }
     }
 
-    return TRUE;
+    return NULL;
 }
-
-BEAST *beast_spawn()
-{
-
-    BEAST *beast = calloc(1, sizeof(BEAST));
-    if (beast == NULL)
-    {
-        errno = ENOMEM;
-        return NULL;
-    }
-
-    beast->id = -1;
-    beast->type = PLAYER_BEAST;
-    beast->positon.x = 25;
-    beast->positon.y = 5;
-    beast->last_move = STAY;
-    beast->kills = 0;
-
-    return beast;
-}
-
-void beast_kill(BEAST *beast)
-{
-    free(beast);
-}
-
 DIRECTION beast_pursuit(WORLD_T *world)
 {
-    // check if player is reachable, if yes try to catch him
-    // if not go to random direction, but continue last direction until block (end of tunel or someting)
+    // check if player is reachable, if yes then try to catch him
+    // if not just stop)
+    CORDS beast_pos = world->beast->positon;
+    CHUNK *chunk = &world->MAP[beast_pos.y][beast_pos.x];
+
+    int BEAST_REACH = 2;
+
+    // vertical
+    for (int i = -2; i <= BEAST_REACH; i++)
+    {
+        if (i == 0)
+            continue;
+        if (beast_pos.y + i < 1 || beast_pos.y + i > ARENA_HEIGHT - 1)
+            continue;
+
+        chunk = &world->MAP[beast_pos.y+i][beast_pos.x + i];
+
+        if (chunk->visitor && chunk->visitor->type == PLAYER_HUMAN)
+        {
+            if (i < 0)
+                return UP;
+            else
+                return DOWN;
+        }
+    }
+
+    // horizontal
+    for (int i = -2; i <= BEAST_REACH; i++)
+    {
+        if (i == 0)
+            continue;
+        if (beast_pos.x + i < 1 || beast_pos.x + i > ARENA_WIDTH - 1)
+            continue;
+
+        chunk = &world->MAP[beast_pos.y][beast_pos.x + i];
+
+        if (chunk->visitor && chunk->visitor->type == PLAYER_HUMAN)
+        {
+            if (i < 0)
+                return LEFT;
+            else
+                return RIGHT;
+        }
+    }
+
     return (rand() % STAY);
 }

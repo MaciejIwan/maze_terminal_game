@@ -57,10 +57,12 @@ int block_action_beast(void *data, void *player)
 {
     if (data == NULL || player == NULL)
         return 1;
+
+    return block_action_player(data, player);
     // CHUNK *chunk = (CHUNK *)data;
     // CHARACTERS *character = (CHARACTERS *)player;
 
-    return 0;
+    //return 0;
 }
 int block_action_player(void *data, void *player)
 {
