@@ -17,6 +17,8 @@ void client()
 
     extern SCREEN_S G_SCR;
     struct SERVER_OUTPUT local_data;
+    struct timespec interval;
+
     memset(&local_data, 0, sizeof(struct SERVER_OUTPUT));
 
     disp_init();
@@ -27,8 +29,13 @@ void client()
     int terminate = 0, c = 0;
     while (!terminate)
     {
-
-        sem_wait(sem_s_write); // wait until server dont ask you
+        // wait until server dont ask you
+        // sem_wait(sem_s_write); 
+        clock_gettime(CLOCK_REALTIME, &interval);
+        interval.tv_sec += 10;
+        if(sem_timedwait(sem_s_write, &interval) != 0){
+            break;
+        }
 
         connection_fetch(&pdata_s_write->cs, &local_data, pdata_s_write, sizeof(struct SERVER_OUTPUT));
         send_key_data(&c);
@@ -43,6 +50,7 @@ void client()
             terminate = 1;
     }
 
+    connection_close();
     key_listener_close();
     screen_layout_close(&G_SCR);
     disp_close();

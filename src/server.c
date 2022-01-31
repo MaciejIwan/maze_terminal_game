@@ -54,6 +54,7 @@ void server()
     int player_input = 0, local_input = 0;
     send_data(world, &swap_online_player_copy, &round_number);
 
+    struct timespec interval;
     // ==============================
     // SERVER LOOP
     // ==============================
@@ -61,11 +62,23 @@ void server()
     while (!terminate)
     {
         // wait for player / user data
-        sem_wait(sem_c_write);
+        //sem_wait(sem_c_write);
+        clock_gettime(CLOCK_REALTIME, &interval);
+        interval.tv_sec += 15;
+        if(sem_timedwait(sem_c_write, &interval) != 0){
+            break;
+        }
+        
+        int result = kill(cpid, 0);
+        if((result == -1 && errno == ESRCH)){
+            terminate = 1;
+            break;
+        }
 
         // get input from other thread in safe way
         deal_with_input(&player_input, &terminate, &round_number, &cpid);
         local_input = key_listener_get();
+
         if (local_input == 'q' || player_input == 'q')
         {
             terminate = 1;
@@ -102,8 +115,8 @@ void server()
     // ==============================
     // SERVER LOOP
     // ==============================
-
-    kill(cpid, SIGKILL);
+    if(kill(cpid, 0))
+        kill(cpid, SIGKILL);
     void key_listener_close();
     connection_close();
     server_world_destory(&world);

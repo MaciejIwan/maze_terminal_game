@@ -99,6 +99,12 @@ static int connection_client_setup()
 
 static void connection_client_close()
 {
+    int result = kill(pdata_s_write->owner_pid, 0);
+    if (result == -1 && errno == ESRCH)
+    {
+        connection_server_close();
+        return;
+    }
     sem_close(sem_c_write);
     sem_close(sem_s_write);
     munmap(pdata_c_write, sizeof(struct USER_INPUT));

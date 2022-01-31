@@ -111,7 +111,8 @@ void draw_display(WINDOW_S *win, const struct SERVER_OUTPUT *local_data, int Off
 
     if(Offset == 0){
     mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 1, 2, "SPID:  %14d", local_data->owner_pid);
-    mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 2, 2, "round:	 %7ld", (long)local_data->round);
+    mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 2, 2, "LPID:  %14d", getpid());
+    mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 3, 2, "round:	%7ld", (long)local_data->round);
     }
 
     int x = 2 + Offset;
