@@ -516,9 +516,7 @@ bool server_player_move(WORLD_T *world, PLAYER *player, DIRECTION dir)
     else
     {
         char block = arena_map[player->positon.y][player->positon.x];
-        if (block == BLOCK_BUSHES)
-            block = BLOCK_BUSHES;
-        else
+        if (block != BLOCK_BUSHES && block != BLOCK_BANK)
             block = BLOCK_BLANK;
         block_change_type(curr_chunk, block, 0);
         server_player_move_change_p_pos(player, dir);
