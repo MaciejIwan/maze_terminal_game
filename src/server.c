@@ -104,9 +104,10 @@ void server()
         draw_display(G_SCR.W[W_DISPLAY], &swap_online_player_copy,0);
         memcpy(&swap_local_player.player, &local_player, sizeof(PLAYER));
         mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 1, 28, "CPID:  %14d", cpid);
+        mvwprintw(G_SCR.W[W_DISPLAY]->winptr, 2, 28, "LI:  %14d", local_input);
         draw_display(G_SCR.W[W_DISPLAY], &swap_local_player,28);
         draw_server_map(G_SCR.W[W_ARENA], world);
-        draw_input(local_player.input);
+        draw_input(local_input);
 
         // send singal to player "NEW DATA ARE WAITING"
         sem_post(sem_s_write);
