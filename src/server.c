@@ -1,6 +1,7 @@
 #include "server.h"
 
 sem_t *sem_s_write;
+pthread_mutex_t beast_mutex;
 int fd_s_write;
 struct SERVER_OUTPUT *pdata_s_write;
 extern SCREEN_S G_SCR;
@@ -17,6 +18,7 @@ DIRECTION key_to_direction(int k);
 void deal_with_input(int *key, int *terminate, int *round_number, int *cpid);
 void send_data(WORLD_T *world, void *src, const int *round_number);
 void deal_with_cmd(int cmd);
+void *beast_main(void *data);
 DIRECTION beast_pursuit(WORLD_T *world);
 void *beast_move(void *data);
 
@@ -29,7 +31,11 @@ void server()
     PLAYER local_player;
     PLAYER online_player;
     BEAST beast;
+
     pthread_t beast_th;
+    pthread_mutex_init(&beast_mutex, NULL);
+    pthread_mutex_lock(&beast_mutex);
+    
     //DIRECTION beast_direction;
 
     connection_fetch(&pdata_s_write->cs, &swap_online_player_copy, pdata_s_write, sizeof(struct SERVER_OUTPUT));
@@ -45,6 +51,7 @@ void server()
     server_player_create(world, &local_player, '1', PLAYER_HUMAN);
     server_player_create(world, &online_player, '2', PLAYER_HUMAN);
     server_player_create(world, &beast, '*', PLAYER_BEAST);
+    pthread_create(&beast_th, NULL, beast_main, &beast.input);
     server_swap_file_generator(world, &online_player, &swap_online_player_copy);
 
     mvprintw(4, 4, "Gotowe, czekam na klienta");
@@ -92,8 +99,7 @@ void server()
         deal_with_cmd(local_input);
         server_player_move(world, &local_player, local_player.input);
         server_player_move(world, &online_player, online_player.input);
-        pthread_create(&beast_th, NULL, beast_move, &beast.input);
-        pthread_join(beast_th, NULL);
+        pthread_mutex_unlock(&beast_mutex);
 
         // generate player data in safe way, and send it
         server_swap_file_generator(world, &online_player, &swap_online_player_copy);
@@ -112,6 +118,7 @@ void server()
         // send singal to player "NEW DATA ARE WAITING"
         sem_post(sem_s_write);
     }
+        pthread_mutex_destroy(&beast_mutex);
 
     // ==============================
     // SERVER LOOP
@@ -530,6 +537,13 @@ bool server_player_move(WORLD_T *world, PLAYER *player, DIRECTION dir)
     }
 
     return TRUE;
+}
+
+void *beast_main(void *data){
+    while(1){
+        pthread_mutex_lock(&beast_mutex);
+        beast_move(data);
+    }
 }
 
 void *beast_move(void *data)
