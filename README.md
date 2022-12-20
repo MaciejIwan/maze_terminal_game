@@ -1,10 +1,9 @@
-Game in C
+# Multithreaded terminal game in C
 
-REQ:
-    - min terminal size:
-        32 row, 110 col
-    - xterm
-    - ncurses
+## REQ:
+* min terminal size: 32 row, 110 col
+* xterm
+- ncurses
 
 Before run install: xterm # to resize terminal size ncurses # to display windows in terminal
 
