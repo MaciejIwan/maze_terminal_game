@@ -1,5 +1,6 @@
-# Multithreaded terminal game in C
-Player is locked in a maze and their task is to collect treasures in the form of coins (c, t, T). If player collects enough treasures takes them to the BANK ( A ) and leaves them there. A player may carry any number of coins at a time (carried), but may lose . The beast chases the player when it comes within range.
+# maze_terminal_game
+Player is locked in a maze and their task is to collect treasures in the form of coins (c, t, T).
+If player collects enough treasures takes them to the BANK ( A ) and leaves them there. A player may carry any number of coins at a time (carried), but may lose . The beast chases the player when it comes within range.
 
 ## Blocks on the map
     * '*' is beast
